@@ -115,6 +115,7 @@ local styles = ui.styles
 local theme = require(styles.Theme)
 
 local Normal = {
+    autoBuyTrialShop = false;
     FarmSpirits = false;
     autoSpawnEliteSpirit = false;
     FarmBossSpirit = false;
@@ -134,9 +135,9 @@ local Normal = {
     autoStairwayNodes = false;
 
     rebirthIfUnAff = false;
-    autoBuyTrialShop = false;
     spiritsPaused = false;
     surgePaused = false;
+
     Connections = {};
 }
 
@@ -170,6 +171,7 @@ do
         
         print("-------------------->> Setting back to Normal <<--------------------")
         getgenv().Settings = Normal
+        getgenv().Settings.autoBuyTrialShop = false;
         getgenv().Settings.FarmSpirits = false
         getgenv().Settings.autoSpawnEliteSpirit = false
         getgenv().Settings.FarmBossSpirit = false
@@ -177,6 +179,15 @@ do
         getgenv().Settings.autoRadianceBoostWhenMax = false;
         getgenv().Settings.autoReincarnate = false;
         getgenv().Settings.autoClickRelic = false;
+        getgenv().Settings.autoFaithNodes = false;
+        getgenv().Settings.autoRebirthNodes = false;
+        getgenv().Settings.autoBibleNodes = false;
+        getgenv().Settings.autoRelicNodes = false;
+        getgenv().Settings.autoSoulNodes = false;
+        getgenv().Settings.autoEliteSoulNodes = false;
+        getgenv().Settings.autoEmberNodes = false;
+        getgenv().Settings.autoHellStairsNodes = false;
+        getgenv().Settings.autoStairwayNodes = false;
         PrintTable(getgenv().Settings)
     end
 end
@@ -1394,7 +1405,6 @@ local function AutoFarmSpirits()
     end
 end
 
-
 local function AutoFarmSurge()
     SetSetting("FarmSurge", not GetSetting("FarmSurge"))
     farmSurgeFunctions:updateText("Farm Surge: "..GetTextFromSetting("FarmSurge"))
@@ -1824,7 +1834,7 @@ local function autoEmberNodes()
         local function addToTable(z)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Ember) == true and checkNodeAvailable(v, true) == true then
+                    if isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Embers) == true and checkNodeAvailable(v, true) == true then
                         table.insert(t, v)
                     end
                 end 
