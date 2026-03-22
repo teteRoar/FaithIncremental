@@ -1277,6 +1277,7 @@ local autoZone1Button, autoZone1Functions = constructImageButton({
     Gradient = getGradient(GetSetting("autoZone1"));
     LayoutOrder = 0;
 })
+constructUiAspect({Parent = autoZone1Button; AspectRatio = 2.854})
 
 local autoZone2Button, autoZone2Functions = constructImageButton({
     Parent = upgradesFrame;
@@ -1284,6 +1285,7 @@ local autoZone2Button, autoZone2Functions = constructImageButton({
     Gradient = getGradient(GetSetting("autoZone2"));
     LayoutOrder = 1;
 })
+constructUiAspect({Parent = autoZone2Button; AspectRatio = 2.854})
 
 local autoZone3NoEliteSoulsButton, autoZone3NoEliteSoulsFunctions = constructImageButton({
     Parent = upgradesFrame;
@@ -1291,6 +1293,7 @@ local autoZone3NoEliteSoulsButton, autoZone3NoEliteSoulsFunctions = constructIma
     Gradient = getGradient(GetSetting("autoZone3NoEliteSouls"));
     LayoutOrder = 2;
 })
+constructUiAspect({Parent = autoZone3NoEliteSoulsButton; AspectRatio = 2.854})
 
 local autoZone3EliteSoulsButton, autoZone3EliteSoulsFunctions = constructImageButton({
     Parent = upgradesFrame;
@@ -1298,6 +1301,7 @@ local autoZone3EliteSoulsButton, autoZone3EliteSoulsFunctions = constructImageBu
     Gradient = getGradient(GetSetting("autoZone3EliteSouls"));
     LayoutOrder = 3;
 })
+constructUiAspect({Parent = autoZone3EliteSoulsButton; AspectRatio = 2.854})
 
 local autoUnderworldButton, autoUnderworldFunctions = constructImageButton({
     Parent = upgradesFrame;
@@ -1305,6 +1309,7 @@ local autoUnderworldButton, autoUnderworldFunctions = constructImageButton({
     Gradient = getGradient(GetSetting("autoUnderworld"));
     LayoutOrder = 4;
 })
+constructUiAspect({Parent = autoUnderworldButton; AspectRatio = 2.854})
 
 local autoHellStairsNodesButton, autoHellStairsNodesFunctions = constructImageButton({
     Parent = upgradesFrame;
