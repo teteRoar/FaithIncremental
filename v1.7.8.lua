@@ -187,23 +187,28 @@ do
         
         print("-------------------->> Setting back to Normal <<--------------------")
         getgenv().Settings = Normal
-        getgenv().Settings.autoBuyTrialShop = false;
-        getgenv().Settings.FarmSpirits = false
-        getgenv().Settings.autoSpawnEliteSpirit = false
-        getgenv().Settings.FarmBossSpirit = false
-        getgenv().Settings.FarmSurge = false
+        getgenv().Settings.autoBuyTrialShop         = false;
+        getgenv().Settings.FarmSpirits              = false
+        getgenv().Settings.autoSpawnEliteSpirit     = false
+        getgenv().Settings.FarmBossSpirit           = false
+        getgenv().Settings.FarmSurge                = false
         getgenv().Settings.autoRadianceBoostWhenMax = false;
-        getgenv().Settings.autoReincarnate = false;
-        getgenv().Settings.autoClickRelic = false;
-        getgenv().Settings.autoFaithNodes = false;
-        getgenv().Settings.autoRebirthNodes = false;
-        getgenv().Settings.autoBibleNodes = false;
-        getgenv().Settings.autoRelicNodes = false;
-        getgenv().Settings.autoSoulNodes = false;
-        getgenv().Settings.autoEliteSoulNodes = false;
-        getgenv().Settings.autoEmberNodes = false;
-        getgenv().Settings.autoHellStairsNodes = false;
-        getgenv().Settings.autoStairwayNodes = false;
+        getgenv().Settings.autoReincarnate          = false;
+        getgenv().Settings.autoClickRelic           = false;
+        getgenv().Settings.autoZone1                = false;
+        getgenv().Settings.autoZone2                = false;
+        getgenv().Settings.autoZone3NoEliteSouls    = false;
+        getgenv().Settings.autoZone3EliteSouls      = false;
+        getgenv().Settings.autoUnderworld           = false;
+        getgenv().Settings.autoSoulTemple           = false;
+        getgenv().Settings.autoRelicTemple          = false;
+        getgenv().Settings.autoBibleTemple          = false;
+        getgenv().Settings.autoSoulDPBoard          = false;
+        getgenv().Settings.autoRelicDPBoard         = false;
+        getgenv().Settings.autoBibleDPBoard         = false;
+        getgenv().Settings.autoDepositMainTemple    = false;
+        getgenv().Settings.autoHellStairsNodes      = false;
+        getgenv().Settings.autoStairwayNodes        = false;
         PrintTable(getgenv().Settings)
     end
 end
@@ -259,7 +264,7 @@ end
 local function NewConnection(Identifier, Connection)
     DebugAssert(typeof(Identifier) == 'string', ("Expected 'string' got '%s'!"):format(typeof(Identifier)))
     DebugAssert(getgenv().Settings.Connections[Identifier] == nil, ("Connection with Identifier, '%s' was already made!"):format(Identifier))
-    DebugAssert(typeof(Connection) == 'RBXScriptConnection', ("Expected 'RBXScriptConnection' got '%s'!"):format(typeof(Connection)))
+    DebugAssert(typeof(Connection) == 'RBXScriptConnection' or typeof(Connection) == 'table', ("Expected 'RBXScriptConnection' or 'table' got '%s'!"):format(typeof(Connection)))
 
     getgenv().Settings.Connections[Identifier] = Connection
     DebugPrint("Made a new connection for "..Identifier)
@@ -1656,7 +1661,7 @@ end
 local function autoZone1()
     SetSetting("autoZone1", not GetSetting("autoZone1"))
     autoZone1Functions:updateText("Auto Zone 1: "..GetTextFromSetting("autoZone1"))
-    autoZone1Functions:updateGradient(getGradient(GetSetting("autoZone1 ")))
+    autoZone1Functions:updateGradient(getGradient(GetSetting("autoZone1")))
 
     local function auto()
         local treeT = {}
@@ -1717,7 +1722,7 @@ end
 local function autoZone2()
     SetSetting("autoZone2", not GetSetting("autoZone2"))
     autoZone2Functions:updateText("Auto Zone 2: "..GetTextFromSetting("autoZone2"))
-    autoZone2Functions:updateGradient(getGradient(GetSetting("autoZone2 ")))
+    autoZone2Functions:updateGradient(getGradient(GetSetting("autoZone2")))
 
     local function auto()
         local treeT = {}
