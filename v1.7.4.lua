@@ -13,8 +13,6 @@ print("-------------------->> Loading GigaHub: Faith Incremental <<-------------
 print("Loading Start Time: 0")
 repeat task.wait() until game:IsLoaded()
 
-
-
 local function PrintTable(table, indent)
     if typeof(table) == "table" then
         task.wait()
@@ -92,6 +90,7 @@ local ReincarnationServiceClient = require(gameServices.ReincarnationService.Rei
 local RelicServiceClient         = require(gameServices.RelicService.RelicServiceClient)
 local AscensionServiceClient     = require(gameServices.AscensionService.AscensionServiceClient)
 local PopupServiceClient         = require(gameServices.PopupService.PopupServiceClient)
+local StatServiceClient          = require(gameServices.StatService.StatServiceClient)
 local TrialShopServiceClient     = require(gameServices.TrialShopService.TrialShopServiceClient)
 local TempleServiceClient        = require(gameServices.TempleService.TempleServiceClient)
 local TempleBoardServiceClient   = require(gameServices.TempleBoardService.TempleBoardServiceClient)
@@ -100,6 +99,7 @@ local UpgradeTreeServiceClient   = require(gameServices.UpgradeTreeService.Upgra
 
 local modules   = ReplicatedStorage.modules
 local constants = modules.constants
+local schemas   = modules.schemas
 local net       = modules.net
 local Packets   = require(net.Packets)
 
@@ -108,6 +108,8 @@ local ZoneId    = GameEnum["ZoneId"]
 local TempleId  = GameEnum["TempleId"]
 local BoardId   = GameEnum["BoardId"]
 --local UpgradeId = GameEnum["UpgradeId"]
+
+local UpgradeBoards = require(schemas.UpgradeBoards)
 
 local ui = ReplicatedStorage.ui
 local styles = ui.styles
@@ -124,13 +126,20 @@ local Normal = {
     autoReincarnate = false;
     autoClickRelic = false;
 
-    autoFaithNodes = false;
-    autoRebirthNodes = false;
-    autoBibleNodes = false;
-    autoRelicNodes = false;
-    autoSoulNodes = false;
-    autoEliteSoulNodes = false;
-    autoEmberNodes = false;
+    autoZone1 = false;
+    autoZone2 = false;
+    autoZone3NoEliteSouls = false;
+    autoZone3EliteSouls = false;
+    autoUnderworld = false;
+
+    autoSoulTemple = false;
+    autoRelicTemple = false;
+    autoBibleTemple = false;
+    autoSoulDPBoard = false;
+    autoRelicDPBoard = false;
+    autoBibleDPBoard = false;
+    autoDepositMainTemple = false;
+    
     autoHellStairsNodes = false;
     autoStairwayNodes = false;
 
@@ -164,9 +173,16 @@ do
                 v:Disconnect()
                 DisconnectCounter += 1
                 print("Disconnected ", i)
+            else
+                pcall(function()
+                    v:Disconnect()
+                    DisconnectCounter += 1
+                    print("Disconnected ", i)
+                end)
             end
         end
 
+        table.clear(getgenv().Settings.Connections)
         print("Disconnected ", DisconnectCounter, " Function (s)")
         
         print("-------------------->> Setting back to Normal <<--------------------")
@@ -529,6 +545,41 @@ local function boardRequestPurchase(zone, id, amount)
     ]]
 end
 
+local function findCurrentLevel(mod: Part)
+    if mod:FindFirstChild("UpgradeBoardUI") then
+        local boardUI = mod:FindFirstChild("UpgradeBoardUI")
+        local fr = boardUI.Frame
+        local content = fr.Content
+        local ctitle = content.Title
+        local textRow = ctitle.TextRow
+        local text = textRow["1"].Text
+
+        --local text = "Upgrades: 62/250"
+        local splitOne = text:split("Upgrades: ")
+        local splitTwo = splitOne[2]:split("/")
+        local currentLevel = tonumber(splitTwo[1])
+        --local maxLevel = tonumber(splitTwo[2])
+
+        return currentLevel
+    end
+
+    return 0
+end
+
+local function purchaseBoards(t: {{part: Part, amount: number}})
+    if typeof(t) ~= "table" then return end
+
+    for _, v in pairs(t) do
+        local zoneId = getZoneId(v.part)
+        local boardId = getBoardId(v.part)
+        local amount = v.amount and v.amount or 1
+
+        if zoneId ~= nil and boardId ~= nil then
+            boardRequestPurchase(zoneId, boardId, amount)
+        end
+    end
+end
+
 -------------------->> UpgradeTreeServiceClient <<--------------------
 
 local function treeRequestPurchase(zone, tree, node)
@@ -579,14 +630,6 @@ local function isNodeColorCurrency(object: BasePart, currency: string)
 
     return false
 end
-
--- local text = "Upgrades: 62/250"
--- local splitOne = text:split("Upgrades: ")
--- local splitTwo = splitOne[2]:split("/")
--- local currentAmount = tonumber(splitTwo[1])
--- local maxAmount = tonumber(splitTwo[2])
--- print(currentAmount)
--- print(maxAmount)
 
 local function checkNodeAvailable(object: Model, underworld: boolean?)
     local zoneId = getZoneId(object)
@@ -1004,7 +1047,7 @@ Frame.Position = UDim2.fromScale(0.5, 0.5)
 Frame.Size = UDim2.fromScale(0.9, 0.9)
 Frame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 Frame.ScrollBarThickness = 6
-Frame.CanvasSize = UDim2.fromScale(0, 4)
+Frame.CanvasSize = UDim2.fromScale(0, 5)
 
 local uiCornerFrame = Instance.new("UICorner", backFrame)
 uiCornerFrame.CornerRadius = UDim.new(0.05, 0)
@@ -1110,7 +1153,7 @@ upgradesFrame.Position = UDim2.fromScale(0.5, 0.5)
 upgradesFrame.Size = UDim2.fromScale(1, 1)
 upgradesFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 upgradesFrame.ScrollBarThickness = 6
-upgradesFrame.CanvasSize = UDim2.fromScale(0, 4)
+upgradesFrame.CanvasSize = UDim2.fromScale(0, 5)
 
 local uiCornerSettings = Instance.new("UICorner", backUpgradesFrame)
 uiCornerSettings.CornerRadius = UDim.new(0.05, 0)
@@ -1228,67 +1271,46 @@ constructUiAspect({Parent = acsendButton; AspectRatio = 2.854})
 
 -------------------->> Upgrades Frame <<--------------------
 
-local autoFaithNodesButton, autoFaithNodesFunctions = constructImageButton({
+local autoZone1Button, autoZone1Functions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Faith Nodes: "..GetTextFromSetting("autoFaithNodes");
-    Gradient = getGradient(GetSetting("autoFaithNodes"));
+    Text = "Auto Zone 1: "..GetTextFromSetting("autoZone1");
+    Gradient = getGradient(GetSetting("autoZone1"));
     LayoutOrder = 0;
 })
-constructUiAspect({Parent = autoFaithNodesButton; AspectRatio = 2.854})
 
-local autoRebirthNodesButton, autoRebirthNodesFunctions = constructImageButton({
+local autoZone2Button, autoZone2Functions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Rebirth Nodes: "..GetTextFromSetting("autoRebirthNodes");
-    Gradient = getGradient(GetSetting("autoRebirthNodes"));
+    Text = "Auto Zone 2: "..GetTextFromSetting("autoZone2");
+    Gradient = getGradient(GetSetting("autoZone2"));
     LayoutOrder = 1;
 })
-constructUiAspect({Parent = autoRebirthNodesButton; AspectRatio = 2.854})
 
-local autoBibleNodesButton, autoBibleNodesFunctions = constructImageButton({
+local autoZone3NoEliteSoulsButton, autoZone3NoEliteSoulsFunctions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Bible Nodes: "..GetTextFromSetting("autoBibleNodes");
-    Gradient = getGradient(GetSetting("autoBibleNodes"));
+    Text = "Auto Zone 3 No Elite Souls: "..GetTextFromSetting("autoZone3NoEliteSouls");
+    Gradient = getGradient(GetSetting("autoZone3NoEliteSouls"));
     LayoutOrder = 2;
 })
-constructUiAspect({Parent = autoBibleNodesButton; AspectRatio = 2.854})
 
-local autoRelicNodesButton, autoRelicNodesFunctions = constructImageButton({
+local autoZone3EliteSoulsButton, autoZone3EliteSoulsFunctions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Relic Nodes: "..GetTextFromSetting("autoRelicNodes");
-    Gradient = getGradient(GetSetting("autoRelicNodes"));
+    Text = "Auto Zone 3 Elite Souls: "..GetTextFromSetting("autoZone3EliteSouls");
+    Gradient = getGradient(GetSetting("autoZone3EliteSouls"));
     LayoutOrder = 3;
 })
-constructUiAspect({Parent = autoRelicNodesButton; AspectRatio = 2.854})
 
-local autoSoulNodesButton, autoSoulNodesFunctions = constructImageButton({
+local autoUnderworldButton, autoUnderworldFunctions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Soul Nodes: "..GetTextFromSetting("autoSoulNodes");
-    Gradient = getGradient(GetSetting("autoSoulNodes"));
+    Text = "Auto Underworld: "..GetTextFromSetting("autoUnderworld");
+    Gradient = getGradient(GetSetting("autoUnderworld"));
     LayoutOrder = 4;
 })
-constructUiAspect({Parent = autoSoulNodesButton; AspectRatio = 2.854})
-
-local autoEliteSoulNodesButton, autoEliteSoulNodesFunctions = constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Elite Soul Nodes: "..GetTextFromSetting("autoEliteSoulNodes");
-    Gradient = getGradient(GetSetting("autoEliteSoulNodes"));
-    LayoutOrder = 5;
-})
-constructUiAspect({Parent = autoEliteSoulNodesButton; AspectRatio = 2.854})
-
-local autoEmberNodesButton, autoEmberNodesFunctions = constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Ember Nodes: "..GetTextFromSetting("autoEmberNodes");
-    Gradient = getGradient(GetSetting("autoEmberNodes"));
-    LayoutOrder = 6;
-})
-constructUiAspect({Parent = autoEmberNodesButton; AspectRatio = 2.854})
 
 local autoHellStairsNodesButton, autoHellStairsNodesFunctions = constructImageButton({
     Parent = upgradesFrame;
     Text = "Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes");
     Gradient = getGradient(GetSetting("autoHellStairsNodes"));
-    LayoutOrder = 7;
+    LayoutOrder = 6;
 })
 constructUiAspect({Parent = autoHellStairsNodesButton; AspectRatio = 2.854})
 
@@ -1296,7 +1318,7 @@ local autoStairwayNodesButton, autoStairwayNodesFunctions = constructImageButton
     Parent = upgradesFrame;
     Text = "Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes");
     Gradient = getGradient(GetSetting("autoStairwayNodes"));
-    LayoutOrder = 8;
+    LayoutOrder = 7;
 })
 constructUiAspect({Parent = autoStairwayNodesButton; AspectRatio = 2.854})
 
@@ -1553,17 +1575,21 @@ local function AutoRadianceBoostWhenMax()
     autoRadianceBoostFunctions:updateText("Auto Radiance Boost When Max: "..GetTextFromSetting("autoRadianceBoostWhenMax"))
     autoRadianceBoostFunctions:updateGradient(getGradient(GetSetting("autoRadianceBoostWhenMax")))
 
+    local waitingTrue = false
+
     local function boost()
         if GetRadianceCharges() == GetRadianceMaxCharges() then
            if GetSetting("FarmSurge") == true then
                 repeat
                     task.wait()
+                    waitingTrue = true
                 until 
                     (IsPlayerInSurge() == true and getSurgeTimeRemaining()>6.5) or
                     GetSetting("FarmSurge") ~= true or
                     GetSetting("autoRadianceBoostWhenMax") ~= true or
                     GetRadianceCharges() ~= GetRadianceMaxCharges()
                 
+                waitingTrue = false
                 if GetSetting("autoRadianceBoostWhenMax") == true and GetRadianceCharges() == GetRadianceMaxCharges() then
                     RequestActivateRadiance()
                 end
@@ -1576,11 +1602,13 @@ local function AutoRadianceBoostWhenMax()
     if GetSetting("autoRadianceBoostWhenMax") == true then
         boost()
 
-        NewConnection("Radiances.RadianceActivate.RadianceGui.ChargesLabel.Changed", Radiances.RadianceActivate.RadianceGui.ChargesLabel.Changed:Connect(function()
-            boost()
+        NewConnection("StatServiceClient.StatChanged", StatServiceClient.StatChanged:Connect(function(stat, value)
+            if waitingTrue == false then
+                 boost()
+            end
         end))
     else
-        DestroyConnection("Radiances.RadianceActivate.RadianceGui.ChargesLabel.Changed")
+        DestroyConnection("StatServiceClient.StatChanged")
     end
 end
 
@@ -1620,241 +1648,301 @@ local function autoClickRelic()
     end
 end
 
-local function autoFaithNodes()
-    SetSetting("autoFaithNodes", not GetSetting("autoFaithNodes"))
-    autoFaithNodesFunctions:updateText("Auto Faith Nodes: "..GetTextFromSetting("autoFaithNodes"))
-    autoFaithNodesFunctions:updateGradient(getGradient(GetSetting("autoFaithNodes")))
+local function autoZone1()
+    SetSetting("autoZone1", not GetSetting("autoZone1"))
+    autoZone1Functions:updateText("Auto Zone 1: "..GetTextFromSetting("autoZone1"))
+    autoZone1Functions:updateGradient(getGradient(GetSetting("autoZone1 ")))
 
-    local function buyFaithNodes()
-        local t = {}
+    local function auto()
+        local treeT = {}
+        local boardt = {}
 
-        local function addToTable(z)
+        local function addToBoardT(z)
             for _, v in pairs(z:GetChildren()) do
-                if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.Faith) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                if v:IsA("Part") then
+                    local zoneId = getZoneId(v)
+                    local boardId = getBoardId(v)
+                    local zone = UpgradeBoards.Zones[zoneId]
+                    local board = zone and zone.Boards[boardId]
+
+                    if zone ~= nil and board ~= nil then
+                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                            table.insert(boardt,
+                            {
+                                part = v,
+                                amount = board.MaxLevel - findCurrentLevel(v)
+                            })
+                        end
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone1)
-        addToTable(Trees.Zone2)
-        addToTable(Trees.Zone3)
-        DebugPrint("Faith Nodes: "..tostring(#t))
-        purchaseNodes(t)
-    end
-
-    if GetSetting("autoFaithNodes") == true then
-        buyFaithNodes()
-
-        while task.wait(0.5) do
-             if GetSetting("autoFaithNodes") ~= true then break end
-             buyFaithNodes()
-        end
-    end
-end
-
-local function autoRebirthNodes()
-    SetSetting("autoRebirthNodes", not GetSetting("autoRebirthNodes"))
-    autoRebirthNodesFunctions:updateText("Auto Rebirth Nodes: "..GetTextFromSetting("autoRebirthNodes"))
-    autoRebirthNodesFunctions:updateGradient(getGradient(GetSetting("autoRebirthNodes")))
-
-    local function buyRebirthNodes()
-        local t = {}
-
-        local function addToTable(z)
+        local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.Rebirths) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                        table.insert(treeT, v)
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone1)
-        addToTable(Trees.Zone2)
-        DebugPrint("Rebirth Nodes: "..tostring(#t))
-        purchaseNodes(t)
+        addToTreeT(Trees.Zone1, GameEnum.Currency.Faith)
+        addToTreeT(Trees.Zone1, GameEnum.Currency.Rebirths)
+        addToBoardT(Boards.Zone1)
+
+        DebugPrint("Zone 1 Nodes: "..tostring(#treeT))
+        DebugPrint("Zone 1 Boards: "..tostring(#boardt))
+        purchaseNodes(treeT)
+        purchaseBoards(boardt)
     end
 
-    if GetSetting("autoRebirthNodes") == true then
-        buyRebirthNodes()
+    if GetSetting("autoZone1") == true then
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoRebirthNodes") ~= true then break end
-             buyRebirthNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(0)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(0)")
     end
 end
 
-local function autoBibleNodes()
-    SetSetting("autoBibleNodes", not GetSetting("autoBibleNodes"))
-    autoBibleNodesFunctions:updateText("Auto Bible Nodes: "..GetTextFromSetting("autoBibleNodes"))
-    autoBibleNodesFunctions:updateGradient(getGradient(GetSetting("autoBibleNodes")))
+local function autoZone2()
+    SetSetting("autoZone2", not GetSetting("autoZone2"))
+    autoZone2Functions:updateText("Auto Zone 2: "..GetTextFromSetting("autoZone2"))
+    autoZone2Functions:updateGradient(getGradient(GetSetting("autoZone2 ")))
 
-    local function buyBibleNodes()
-        local t = {}
+    local function auto()
+        local treeT = {}
+        local boardt = {}
 
-        local function addToTable(z)
+        local function addToBoardT(z)
             for _, v in pairs(z:GetChildren()) do
-                if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.Bible) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                if v:IsA("Part") then
+                    local zoneId = getZoneId(v)
+                    local boardId = getBoardId(v)
+                    local zone = UpgradeBoards.Zones[zoneId]
+                    local board = zone and zone.Boards[boardId]
+
+                    if zone ~= nil and board ~= nil then
+                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                            table.insert(boardt,
+                            {
+                                part = v,
+                                amount = board.MaxLevel - findCurrentLevel(v)
+                            })
+                        end
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone1)
-        addToTable(Trees.Zone2)
-        DebugPrint("Bible Nodes: "..tostring(#t))
-        purchaseNodes(t)
-    end
-
-    if GetSetting("autoBibleNodes") == true then
-        buyBibleNodes()
-
-        while task.wait(0.5) do
-             if GetSetting("autoBibleNodes") ~= true then break end
-             buyBibleNodes()
-        end
-    end
-end
-
-local function autoRelicNodes()
-    SetSetting("autoRelicNodes", not GetSetting("autoRelicNodes"))
-    autoRelicNodesFunctions:updateText("Auto Relic Nodes: "..GetTextFromSetting("autoRelicNodes"))
-    autoRelicNodesFunctions:updateGradient(getGradient(GetSetting("autoRelicNodes")))
-
-    local function buyRelicNodes()
-        local t = {}
-
-        local function addToTable(z)
+        local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.Relic) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                        table.insert(treeT, v)
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone2)
-        addToTable(Trees.Zone3)
-        DebugPrint("Relic Nodes: "..tostring(#t))
-        purchaseNodes(t)
+        addToTreeT(Trees.Zone2, GameEnum.Currency.Faith)
+        addToTreeT(Trees.Zone2, GameEnum.Currency.Rebirths)
+        addToTreeT(Trees.Zone2, GameEnum.Currency.Bible)
+        addToTreeT(Trees.Zone2, GameEnum.Currency.Relics)
+        addToBoardT(Boards.Zone2)
+        addToBoardT(Boards.Zone3)
+
+        DebugPrint("Zone 2 Nodes: "..tostring(#treeT))
+        DebugPrint("Zone 2 Boards: "..tostring(#boardt))
+        purchaseNodes(treeT)
+        purchaseBoards(boardt)
     end
 
-    if GetSetting("autoRelicNodes") == true then
-        buyRelicNodes()
+    if GetSetting("autoZone2") == true then
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoRelicNodes") ~= true then break end
-             buyRelicNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(1)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(1)")
     end
 end
 
-local function autoSoulNodes()
-    SetSetting("autoSoulNodes", not GetSetting("autoSoulNodes"))
-    autoSoulNodesFunctions:updateText("Auto Soul Nodes: "..GetTextFromSetting("autoSoulNodes"))
-    autoSoulNodesFunctions:updateGradient(getGradient(GetSetting("autoSoulNodes")))
+local function autoZone3NoEliteSouls()
+    SetSetting("autoZone3NoEliteSouls", not GetSetting("autoZone3NoEliteSouls"))
+    autoZone3NoEliteSoulsFunctions:updateText("Auto Zone 3 No Elite Souls: "..GetTextFromSetting("autoZone3NoEliteSouls"))
+    autoZone3NoEliteSoulsFunctions:updateGradient(getGradient(GetSetting("autoZone3NoEliteSouls")))
 
-    local function buySoulNodes()
-        local t = {}
+    local function auto()
+        local treeT = {}
+        local boardt = {}
 
-        local function addToTable(z)
+        local function addToBoardT(z)
             for _, v in pairs(z:GetChildren()) do
-                if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.Soul) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                if v:IsA("Part") then
+                    local zoneId = getZoneId(v)
+                    local boardId = getBoardId(v)
+                    local zone = UpgradeBoards.Zones[zoneId]
+                    local board = zone and zone.Boards[boardId]
+
+                    if zone ~= nil and board ~= nil then
+                        if board.Currency == GameEnum.Currency.EliteSouls then continue end
+                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                            table.insert(boardt,
+                            {
+                                part = v,
+                                amount = board.MaxLevel - findCurrentLevel(v)
+                            })
+                        end
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone3)
-        DebugPrint("Soul Nodes: "..tostring(#t))
-        purchaseNodes(t)
-    end
-
-    if GetSetting("autoSoulNodes") == true then
-        buySoulNodes()
-
-        while task.wait(0.5) do
-             if GetSetting("autoSoulNodes") ~= true then break end
-             buySoulNodes()
-        end
-    end
-end
-
-local function autoEliteSoulNodes()
-    SetSetting("autoEliteSoulNodes", not GetSetting("autoEliteSoulNodes"))
-    autoEliteSoulNodesFunctions:updateText("Auto Elite Soul Nodes: "..GetTextFromSetting("autoEliteSoulNodes"))
-    autoEliteSoulNodesFunctions:updateGradient(getGradient(GetSetting("autoEliteSoulNodes")))
-
-    local function buyEliteSoulNodes()
-        local t = {}
-
-        local function addToTable(z)
+        local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, GameEnum.Currency.EliteSoul) == true and checkNodeAvailable(v) == true then
-                        table.insert(t, v)
+                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                        table.insert(treeT, v)
                     end
                 end 
             end
         end
 
-        addToTable(Trees.Zone3)
-        DebugPrint("Elite Soul Nodes: "..tostring(#t))
-        purchaseNodes(t)
+        addToTreeT(Trees.Zone3, GameEnum.Currency.Faith)
+        addToTreeT(Trees.Zone3, GameEnum.Currency.Relics)
+        addToTreeT(Trees.Zone3, GameEnum.Currency.Souls)
+        addToBoardT(Boards.Zone4)
+
+        DebugPrint("Zone 3 Nodes: "..tostring(#treeT))
+        DebugPrint("Zone 3 Boards: "..tostring(#boardt))
+        purchaseNodes(treeT)
+        purchaseBoards(boardt)
     end
 
-    if GetSetting("autoEliteSoulNodes") == true then
-        buyEliteSoulNodes()
+    if GetSetting("autoZone3") == true then
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoEliteSoulNodes") ~= true then break end
-             buyEliteSoulNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(2)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(2)")
     end
 end
 
-local function autoEmberNodes()
-    SetSetting("autoEmberNodes", not GetSetting("autoEmberNodes"))
-    autoEmberNodesFunctions:updateText("Auto Ember Nodes: "..GetTextFromSetting("autoEmberNodes"))
-    autoEmberNodesFunctions:updateGradient(getGradient(GetSetting("autoEmberNodes")))
+local function autoZone3EliteSouls()
+    SetSetting("autoZone3EliteSouls", not GetSetting("autoZone3EliteSouls"))
+    autoZone3EliteSoulsFunctions:updateText("Auto Zone 3 Elite Souls: "..GetTextFromSetting("autoZone3EliteSouls"))
+    autoZone3EliteSoulsFunctions:updateGradient(getGradient(GetSetting("autoZone3EliteSouls")))
 
-    local function buyEmberNodes()
-        local t = {}
+    local function auto()
+        local treeT = {}
+        local boardt = {}
 
-        local function addToTable(z)
-            for _, v in pairs(z:GetChildren()) do
-                if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Embers) == true and checkNodeAvailable(v, true) == true then
-                        table.insert(t, v)
+        for _, v in pairs(Trees.Zone3:GetChildren()) do
+            if v:IsA("Model") and v:FindFirstChild("Node") then
+                if isNodeColorCurrency(v.Node, GameEnum.Currency.EliteSouls) == true and checkNodeAvailable(v) == true then
+                    table.insert(treeT, v)
+                end
+            end 
+        end
+
+        for _, v in pairs(Boards.Zone4:GetChildren()) do
+            if v:IsA("Part") then
+                local zoneId = getZoneId(v)
+                local boardId = getBoardId(v)
+                local zone = UpgradeBoards.Zones[zoneId]
+                local board = zone and zone.Boards[boardId]
+
+                if zone ~= nil and board ~= nil then
+                    if board.Currency ~= GameEnum.Currency.EliteSouls then continue end
+                    if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                        table.insert(boardt,
+                        {
+                            part = v,
+                            amount = board.MaxLevel - findCurrentLevel(v)
+                        })
                     end
-                end 
-            end
+                end
+            end 
         end
 
-        addToTable(Trees["Zone_5(Underworld)"].Nodes)
-        DebugPrint("Ember Nodes: "..tostring(#t))
-        purchaseNodes(t, true)
+        DebugPrint("Zone 3 Elite Soul Nodes: "..tostring(#treeT))
+        DebugPrint("Zone 3 Elite Soul Boards: "..tostring(#boardt))
+        purchaseNodes(treeT)
+        purchaseBoards(boardt)
     end
 
-    if GetSetting("autoEmberNodes") == true then
-        buyEmberNodes()
+    if GetSetting("autoZone3EliteSouls") == true then
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoEmberNodes") ~= true then break end
-             buyEmberNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(3)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(3)")
     end
 end
+
+local function autoUnderworld()
+    SetSetting("autoUnderworld", not GetSetting("autoUnderworld"))
+    autoUnderworldFunctions:updateText("Auto Underworld: "..GetTextFromSetting("autoUnderworld"))
+    autoUnderworldFunctions:updateGradient(getGradient(GetSetting("autoUnderworld")))
+
+    local function auto()
+        local treeT = {}
+        local boardt = {}
+
+        for _, v in pairs(Trees["Zone_5(Underworld)"].Nodes:GetChildren()) do
+            if v:IsA("Model") and v:FindFirstChild("Node") then
+                if isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Embers) == true and checkNodeAvailable(v, true) == true then
+                    table.insert(treeT, v)
+                end
+            end 
+        end
+
+        for _, v in pairs(Boards.Zone5:GetChildren()) do
+            if v:IsA("Part") then
+                local zoneId = getZoneId(v)
+                local boardId = getBoardId(v)
+                local zone = UpgradeBoards.Zones[zoneId]
+                local board = zone and zone.Boards[boardId]
+
+                if zone ~= nil and board ~= nil then
+                    if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                        table.insert(boardt,
+                        {
+                            part = v,
+                            amount = board.MaxLevel - findCurrentLevel(v)
+                        })
+                    end
+                end
+            end 
+        end
+
+        DebugPrint("Underworld Nodes: "..tostring(#treeT))
+        DebugPrint("Underworld Boards: "..tostring(#boardt))
+        purchaseNodes(treeT)
+        purchaseBoards(boardt)
+    end
+
+    if GetSetting("autoUnderworld") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(4)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(4)")
+    end
+end
+
 
 local function autoHellStairsNodes()
     SetSetting("autoHellStairsNodes", not GetSetting("autoHellStairsNodes"))
@@ -1984,32 +2072,24 @@ end
 -------------------->> Upgrades Buttons <<--------------------
 
 do
-    NewConnection("autoFaithNodesButton.MouseButton1Click", autoFaithNodesButton.MouseButton1Click:Connect(function()
-        autoFaithNodes()
+    NewConnection("autoZone1Button.MouseButton1Click", autoZone1Button.MouseButton1Click:Connect(function()
+        autoZone1()
     end))
 
-    NewConnection("autoRebirthNodesButton.MouseButton1Click", autoRebirthNodesButton.MouseButton1Click:Connect(function()
-        autoRebirthNodes()
+    NewConnection("autoZone2Button.MouseButton1Click", autoZone2Button.MouseButton1Click:Connect(function()
+        autoZone2()
     end))
 
-    NewConnection("autoBibleNodesButton.MouseButton1Click", autoBibleNodesButton.MouseButton1Click:Connect(function()
-        autoBibleNodes()
+    NewConnection("autoZone3NoEliteSoulsButton.MouseButton1Click", autoZone3NoEliteSoulsButton.MouseButton1Click:Connect(function()
+        autoZone3NoEliteSouls()
     end))
 
-    NewConnection("autoRelicNodesButton.MouseButton1Click", autoRelicNodesButton.MouseButton1Click:Connect(function()
-        autoRelicNodes()
+    NewConnection("autoZone3EliteSoulsButton.MouseButton1Click", autoZone3EliteSoulsButton.MouseButton1Click:Connect(function()
+        autoZone3EliteSouls()
     end))
 
-    NewConnection("autoSoulNodesButton.MouseButton1Click", autoSoulNodesButton.MouseButton1Click:Connect(function()
-        autoSoulNodes()
-    end))
-
-    NewConnection("autoEliteSoulNodesButton.MouseButton1Click", autoEliteSoulNodesButton.MouseButton1Click:Connect(function()
-        autoEliteSoulNodes()
-    end))
-
-    NewConnection("autoEmberNodesButton.MouseButton1Click", autoEmberNodesButton.MouseButton1Click:Connect(function()
-        autoEmberNodes()
+    NewConnection("autoUnderworldButton.MouseButton1Click", autoUnderworldButton.MouseButton1Click:Connect(function()
+        autoUnderworld()
     end))
 
     NewConnection("autoHellStairsNodesButton.MouseButton1Click", autoHellStairsNodesButton.MouseButton1Click:Connect(function()
