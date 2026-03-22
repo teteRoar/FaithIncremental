@@ -550,22 +550,39 @@ local function boardRequestPurchase(zone, id, amount)
     ]]
 end
 
+local function isBoardTypeValid(boardType)
+    return boardType ~= "Rebirth" and boardType ~= "Reincarnation" and boardType ~= "Clicker"
+end
+
 local function findCurrentLevel(mod: Part)
     if mod:FindFirstChild("UpgradeBoardUI") then
-        local boardUI = mod:FindFirstChild("UpgradeBoardUI")
-        local fr = boardUI.Frame
-        local content = fr.Content
-        local ctitle = content.Title
-        local textRow = ctitle.TextRow
-        local text = textRow["1"].Text
+        local s, r = pcall(function()
+            local boardUI = mod:FindFirstChild("UpgradeBoardUI")
+            local fr = boardUI.Frame
+            local content = fr.Content
+            local title = (function()
+                for _, v in ipairs(content:GetDescendants()) do
+                    if v:IsA("TextLabel") and v.Name:lower() == "title" then
+                        return v
+                    end
+                end
+            end)()
 
-        --local text = "Upgrades: 62/250"
-        local splitOne = text:split("Upgrades: ")
-        local splitTwo = splitOne[2]:split("/")
-        local currentLevel = tonumber(splitTwo[1])
-        --local maxLevel = tonumber(splitTwo[2])
+            if title == nil then return 0 end
+            local text = title.TextRow["1"].Text
 
-        return currentLevel
+            --local text = "Upgrades: 62/250"
+            local splitOne = text:split("Upgrades: ")
+            local splitTwo = splitOne[2]:split("/")
+            local currentLevel = tonumber(splitTwo[1])
+            --local maxLevel = tonumber(splitTwo[2])
+
+            return currentLevel
+        end)
+        
+        if s == true then
+            return r
+        end
     end
 
     return 0
@@ -1160,20 +1177,20 @@ upgradesFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
 upgradesFrame.ScrollBarThickness = 6
 upgradesFrame.CanvasSize = UDim2.fromScale(0, 5)
 
-local uiCornerSettings = Instance.new("UICorner", backUpgradesFrame)
-uiCornerSettings.CornerRadius = UDim.new(0.05, 0)
+local uiCornerUpgrades = Instance.new("UICorner", backUpgradesFrame)
+uiCornerUpgrades.CornerRadius = UDim.new(0.05, 0)
 
-local uiListLayoutSettings = Instance.new("UIListLayout", upgradesFrame)
-uiListLayoutSettings.Padding = UDim.new(0.005, 0)
-uiListLayoutSettings.FillDirection = Enum.FillDirection.Vertical
-uiListLayoutSettings.SortOrder = Enum.SortOrder.LayoutOrder
-uiListLayoutSettings.HorizontalAlignment = Enum.HorizontalAlignment.Center
-uiListLayoutSettings.VerticalAlignment = Enum.VerticalAlignment.Top
+local uiListLayoutUpgrades = Instance.new("UIListLayout", upgradesFrame)
+uiListLayoutUpgrades.Padding = UDim.new(0.005, 0)
+uiListLayoutUpgrades.FillDirection = Enum.FillDirection.Vertical
+uiListLayoutUpgrades.SortOrder = Enum.SortOrder.LayoutOrder
+uiListLayoutUpgrades.HorizontalAlignment = Enum.HorizontalAlignment.Center
+uiListLayoutUpgrades.VerticalAlignment = Enum.VerticalAlignment.Top
 
-local FolderSettings = Instance.new("Folder", backUpgradesFrame)
-FolderSettings.Name = "Ignore"
+local FolderUpgrades = Instance.new("Folder", backUpgradesFrame)
+FolderUpgrades.Name = "Ignore"
 
-local TitleSettings = constructTextLabel({
+local TitleUpgrades = constructTextLabel({
     Parent = backUpgradesFrame;
     AnchorPoint = Vector2.new(0, 1);
     Position = UDim2.fromScale(0, -0.05);
@@ -1182,7 +1199,7 @@ local TitleSettings = constructTextLabel({
     TextXAlignment = Enum.TextXAlignment.Left;
 })
 
-constructUiAspect({Parent = TitleSettings; AspectRatio = 9.933})
+constructUiAspect({Parent = TitleUpgrades; AspectRatio = 9.933})
 constructUiAspect({Parent = backUpgradesFrame; AspectRatio = 1.104})
 
 -------------------->> Close Buttons <<--------------------
@@ -1676,7 +1693,7 @@ local function autoZone1()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
                             table.insert(boardt,
                             {
                                 part = v,
@@ -1737,7 +1754,7 @@ local function autoZone2()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
                             table.insert(boardt,
                             {
                                 part = v,
@@ -1802,7 +1819,7 @@ local function autoZone3NoEliteSouls()
 
                     if zone ~= nil and board ~= nil then
                         if board.Currency == GameEnum.Currency.EliteSouls then continue end
-                        if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
                             table.insert(boardt,
                             {
                                 part = v,
@@ -1872,7 +1889,7 @@ local function autoZone3EliteSouls()
 
                 if zone ~= nil and board ~= nil then
                     if board.Currency ~= GameEnum.Currency.EliteSouls then continue end
-                    if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                    if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
                         table.insert(boardt,
                         {
                             part = v,
@@ -1925,7 +1942,7 @@ local function autoUnderworld()
                 local board = zone and zone.Boards[boardId]
 
                 if zone ~= nil and board ~= nil then
-                    if board.BoardType ~= "Rebirth" and board.MaxLevel > findCurrentLevel(v) then
+                    if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
                         table.insert(boardt,
                         {
                             part = v,
