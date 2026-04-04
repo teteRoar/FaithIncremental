@@ -554,50 +554,55 @@ local function isBoardTypeValid(boardType)
     return boardType ~= "Rebirth" and boardType ~= "Reincarnation" and boardType ~= "Clicker"
 end
 
-local function findCurrentLevel(mod: Part)
-    if mod:FindFirstChild("UpgradeBoardUI") then
-        local s, r = pcall(function()
-            local boardUI = mod:FindFirstChild("UpgradeBoardUI")
-            local fr = boardUI.Frame
-            local content = fr.Content
-            local title = (function()
-                for _, v in ipairs(content:GetDescendants()) do
-                    if v:IsA("TextLabel") and v.Name:lower() == "title" then
-                        return v
-                    end
-                end
-            end)()
-
-            if title == nil then return 0 end
-            local text = title.TextRow["1"].Text
-
-            --local text = "Upgrades: 62/250"
-            local splitOne = text:split("Upgrades: ")
-            local splitTwo = splitOne[2]:split("/")
-            local currentLevel = tonumber(splitTwo[1])
-            --local maxLevel = tonumber(splitTwo[2])
-
-            return currentLevel
-        end)
-        
-        if s == true then
-            return r
-        end
-    end
-
-    return 0
-end
-
-local function purchaseBoards(t: {{part: Part, amount: number}})
+local function purchaseBoards(t: {Part})
     if typeof(t) ~= "table" then return end
 
     for _, v in pairs(t) do
-        local zoneId = getZoneId(v.part)
-        local boardId = getBoardId(v.part)
-        local amount = v.amount and v.amount or 1
+        local zoneId = getZoneId(v)
+        local boardId = getBoardId(v)
 
         if zoneId ~= nil and boardId ~= nil then
-            boardRequestPurchase(zoneId, boardId, amount)
+            if v:FindFirstChild("UpgradeBoardUI") then
+                pcall(function()
+                    local boardUI = v:FindFirstChild("UpgradeBoardUI")
+                    local fr = boardUI.Frame
+                    local content = fr.Content
+                    -- local title = (function()
+                    --     for _, v in ipairs(content:GetDescendants()) do
+                    --         if v:IsA("TextLabel") and v.Name:lower() == "title" then
+                    --             return v
+                    --         end
+                    --     end
+                    -- end)()
+
+                    -- if title == nil then return 0 end
+                    -- local text = title.TextRow["1"].Text
+
+                    --local text = "Upgrades: 62/250"
+                    -- local splitOne = text:split("Upgrades: ")
+                    -- local splitTwo = splitOne[2]:split("/")
+                    -- local currentLevel = tonumber(splitTwo[1])
+                    --local maxLevel = tonumber(splitTwo[2])
+
+                    local BuyMaxButton = (function()
+                        for _, but in ipairs(content:GetDescendants()) do
+                            if but:IsA("TextButton") and but.Name:lower() == "buymaxbutton" then
+                                return but
+                            end
+                        end
+
+                        return nil
+                    end)()
+
+                    if BuyMaxButton ~= nil then
+                        if typeof(firesignal) == "function" then
+                            firesignal(BuyMaxButton.Activated)
+                        end
+                    else
+                        boardRequestPurchase(zoneId, boardId, 1)
+                    end
+                end)
+            end
         end
     end
 end
@@ -693,10 +698,10 @@ end
 -------------------->> Functions continued <<--------------------
 
 local function rebirth()
-    if typeof(firesignal) == "function" then
-        --firesignal(RebirthButton.Activated)
-        boardRequestPurchase(ZoneId.Zone1_Church, "Rebirth", 1)
-    end
+    -- if typeof(firesignal) == "function" then
+    --     firesignal(RebirthButton.Activated)
+    -- end
+    boardRequestPurchase(ZoneId.Zone1_Church, "Rebirth", 1)
 end
 
 local function spawnElite()
@@ -1337,7 +1342,7 @@ local autoHellStairsNodesButton, autoHellStairsNodesFunctions = constructImageBu
     Parent = upgradesFrame;
     Text = "Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes");
     Gradient = getGradient(GetSetting("autoHellStairsNodes"));
-    LayoutOrder = 6;
+    LayoutOrder = 12;
 })
 constructUiAspect({Parent = autoHellStairsNodesButton; AspectRatio = 2.854})
 
@@ -1345,7 +1350,7 @@ local autoStairwayNodesButton, autoStairwayNodesFunctions = constructImageButton
     Parent = upgradesFrame;
     Text = "Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes");
     Gradient = getGradient(GetSetting("autoStairwayNodes"));
-    LayoutOrder = 7;
+    LayoutOrder = 13;
 })
 constructUiAspect({Parent = autoStairwayNodesButton; AspectRatio = 2.854})
 
@@ -1401,19 +1406,23 @@ constructUiAspect({Parent = autoClickRelicButton; AspectRatio = 2.854})
 
 -------------------->> UI Protection <<--------------------
 
-do
-    print("\n\n\n-------------------->> ProtectGui <<--------------------\n")
-    local startTime = DateTime.now().UnixTimestamp
+local protectGui = false
 
-    for _, Object in pairs(ScreenGui:GetDescendants()) do
-        local oldName = Object.Name
-        Object.Name = ""
+if protectGui == true then
+    do
+        print("\n\n\n-------------------->> ProtectGui <<--------------------\n")
+        local startTime = DateTime.now().UnixTimestamp
 
-        print(("\t'%s' --> '%s'"):format(oldName, Object.Name))
-        task.wait()
+        for _, Object in pairs(ScreenGui:GetDescendants()) do
+            local oldName = Object.Name
+            Object.Name = ""
+
+            print(("\t'%s' --> '%s'"):format(oldName, Object.Name))
+            task.wait()
+        end
+
+        print(("\n-------------------->> ProtectGui Completed! | Took %d second (s)! <<--------------------\n\n\n"):format(DateTime.now().UnixTimestamp-startTime))
     end
-
-    print(("\n-------------------->> ProtectGui Completed! | Took %d second (s)! <<--------------------\n\n\n"):format(DateTime.now().UnixTimestamp-startTime))
 end
 
 -------------------->> Gui Functions <<--------------------
@@ -1463,12 +1472,14 @@ local function AutoFarmSurge()
         if (isSurgeActive() == true and getSurgePosition() ~= nil) and GetSetting("FarmSurge") == true then
             pcall(function()
                 if GetSetting("surgePaused") ~= true and GetHumanoidRootPart() ~= nil then
+                    local lastCFrame = GetLastCFrame()
                     repeat
                         task.wait()
                         SetSetting("spiritsPaused", true)
                         GetHumanoidRootPart().CFrame = CFrame.new(getSurgePosition() + Vector3.new(0, 2.75, 0))
                         GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
                     until isSurgeActive() == false or getSurgePosition() == nil or GetSetting("FarmSurge") ~= true or GetSetting("surgePaused") == true
+                    GetHumanoidRootPart().CFrame = lastCFrame
                 end
             end)
 
@@ -1680,7 +1691,12 @@ local function autoZone1()
     autoZone1Functions:updateText("Auto Zone 1: "..GetTextFromSetting("autoZone1"))
     autoZone1Functions:updateGradient(getGradient(GetSetting("autoZone1")))
 
+    local db = false
+
     local function auto()
+        if db == true then return end
+        db = true
+
         local treeT = {}
         local boardt = {}
 
@@ -1693,12 +1709,8 @@ local function autoZone1()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
-                            table.insert(boardt,
-                            {
-                                part = v,
-                                amount = board.MaxLevel - findCurrentLevel(v)
-                            })
+                        if isBoardTypeValid(board.BoardType) == true then
+                            table.insert(boardt, v)
                         end
                     end
                 end 
@@ -1717,12 +1729,15 @@ local function autoZone1()
 
         addToTreeT(Trees.Zone1, GameEnum.Currency.Faith)
         addToTreeT(Trees.Zone1, GameEnum.Currency.Rebirths)
+        addToTreeT(Trees.Zone1, GameEnum.Currency.Bible)
         addToBoardT(Boards.Zone1)
 
         DebugPrint("Zone 1 Nodes: "..tostring(#treeT))
         DebugPrint("Zone 1 Boards: "..tostring(#boardt))
         purchaseNodes(treeT)
         purchaseBoards(boardt)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoZone1") == true then
@@ -1741,7 +1756,12 @@ local function autoZone2()
     autoZone2Functions:updateText("Auto Zone 2: "..GetTextFromSetting("autoZone2"))
     autoZone2Functions:updateGradient(getGradient(GetSetting("autoZone2")))
 
+    local db = false
+
     local function auto()
+        if db == true then return end
+        db = true
+
         local treeT = {}
         local boardt = {}
 
@@ -1754,12 +1774,8 @@ local function autoZone2()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
-                            table.insert(boardt,
-                            {
-                                part = v,
-                                amount = board.MaxLevel - findCurrentLevel(v)
-                            })
+                        if isBoardTypeValid(board.BoardType) == true then
+                            table.insert(boardt, v)
                         end
                     end
                 end 
@@ -1787,6 +1803,8 @@ local function autoZone2()
         DebugPrint("Zone 2 Boards: "..tostring(#boardt))
         purchaseNodes(treeT)
         purchaseBoards(boardt)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoZone2") == true then
@@ -1805,7 +1823,12 @@ local function autoZone3NoEliteSouls()
     autoZone3NoEliteSoulsFunctions:updateText("Auto Zone 3 No Elite Souls: "..GetTextFromSetting("autoZone3NoEliteSouls"))
     autoZone3NoEliteSoulsFunctions:updateGradient(getGradient(GetSetting("autoZone3NoEliteSouls")))
 
+    local db = false
+
     local function auto()
+        if db == true then return end
+        db = true
+
         local treeT = {}
         local boardt = {}
 
@@ -1819,12 +1842,8 @@ local function autoZone3NoEliteSouls()
 
                     if zone ~= nil and board ~= nil then
                         if board.Currency == GameEnum.Currency.EliteSouls then continue end
-                        if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
-                            table.insert(boardt,
-                            {
-                                part = v,
-                                amount = board.MaxLevel - findCurrentLevel(v)
-                            })
+                        if isBoardTypeValid(board.BoardType) == true then
+                            table.insert(boardt, v)
                         end
                     end
                 end 
@@ -1850,6 +1869,8 @@ local function autoZone3NoEliteSouls()
         DebugPrint("Zone 3 Boards: "..tostring(#boardt))
         purchaseNodes(treeT)
         purchaseBoards(boardt)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoZone3") == true then
@@ -1868,7 +1889,12 @@ local function autoZone3EliteSouls()
     autoZone3EliteSoulsFunctions:updateText("Auto Zone 3 Elite Souls: "..GetTextFromSetting("autoZone3EliteSouls"))
     autoZone3EliteSoulsFunctions:updateGradient(getGradient(GetSetting("autoZone3EliteSouls")))
 
+    local db = false
+
     local function auto()
+        if db == true then return end
+        db = true
+
         local treeT = {}
         local boardt = {}
 
@@ -1889,12 +1915,8 @@ local function autoZone3EliteSouls()
 
                 if zone ~= nil and board ~= nil then
                     if board.Currency ~= GameEnum.Currency.EliteSouls then continue end
-                    if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
-                        table.insert(boardt,
-                        {
-                            part = v,
-                            amount = board.MaxLevel - findCurrentLevel(v)
-                        })
+                    if isBoardTypeValid(board.BoardType) == true then
+                        table.insert(boardt, v)
                     end
                 end
             end 
@@ -1904,6 +1926,8 @@ local function autoZone3EliteSouls()
         DebugPrint("Zone 3 Elite Soul Boards: "..tostring(#boardt))
         purchaseNodes(treeT)
         purchaseBoards(boardt)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoZone3EliteSouls") == true then
@@ -1922,7 +1946,12 @@ local function autoUnderworld()
     autoUnderworldFunctions:updateText("Auto Underworld: "..GetTextFromSetting("autoUnderworld"))
     autoUnderworldFunctions:updateGradient(getGradient(GetSetting("autoUnderworld")))
 
+    local db = false
+
     local function auto()
+        if db == true then return end
+        db = true
+
         local treeT = {}
         local boardt = {}
 
@@ -1942,12 +1971,8 @@ local function autoUnderworld()
                 local board = zone and zone.Boards[boardId]
 
                 if zone ~= nil and board ~= nil then
-                    if isBoardTypeValid(board.BoardType) == true and (board.MaxLevel > findCurrentLevel(v) and findCurrentLevel(v) ~= 0) then
-                        table.insert(boardt,
-                        {
-                            part = v,
-                            amount = board.MaxLevel - findCurrentLevel(v)
-                        })
+                    if isBoardTypeValid(board.BoardType) == true then
+                        table.insert(boardt, v)
                     end
                 end
             end 
@@ -1955,8 +1980,10 @@ local function autoUnderworld()
 
         DebugPrint("Underworld Nodes: "..tostring(#treeT))
         DebugPrint("Underworld Boards: "..tostring(#boardt))
-        purchaseNodes(treeT)
+        purchaseNodes(treeT, true)
         purchaseBoards(boardt)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoUnderworld") == true then
@@ -1976,7 +2003,12 @@ local function autoHellStairsNodes()
     autoHellStairsNodesFunctions:updateText("Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes"))
     autoHellStairsNodesFunctions:updateGradient(getGradient(GetSetting("autoHellStairsNodes")))
 
-    local function buyHellStairsNodes()
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
         local t = {}
 
         for _, v in pairs(Trees.HellStairs:GetChildren()) do
@@ -1989,15 +2021,18 @@ local function autoHellStairsNodes()
 
         DebugPrint("Hell Stairs Nodes: "..tostring(#t))
         purchaseNodes(t)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoHellStairsNodes") == true then
-        buyHellStairsNodes()
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoHellStairsNodes") ~= true then break end
-             buyHellStairsNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(12)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(12)")
     end
 end
 
@@ -2006,7 +2041,12 @@ local function autoStairwayNodes()
     autoStairwayNodesFunctions:updateText("Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes"))
     autoStairwayNodesFunctions:updateGradient(getGradient(GetSetting("autoStairwayNodes")))
 
-    local function buyStairwayNodes()
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
         local t = {}
 
         for _, v in pairs(Trees.Stairway:GetChildren()) do
@@ -2019,15 +2059,18 @@ local function autoStairwayNodes()
 
         DebugPrint("Stairway Nodes: "..tostring(#t))
         purchaseNodes(t)
+        task.wait(0.5)
+        db = false
     end
 
     if GetSetting("autoStairwayNodes") == true then
-        buyStairwayNodes()
+        auto()
 
-        while task.wait(0.5) do
-             if GetSetting("autoStairwayNodes") ~= true then break end
-             buyStairwayNodes()
-        end
+        NewConnection("StatServiceClient.StatChanged(13)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(13)")
     end
 end
 
