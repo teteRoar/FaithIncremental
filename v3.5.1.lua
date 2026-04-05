@@ -1,5 +1,5 @@
 -------------------->> Execution Check <<--------------------
-local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v3.0.1.lua", true))()'
+local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v3.5.1.lua", true))()'
 
 if game.PlaceId ~= 94264573845314 then
     warn("Please execute this script in the correct game, 'Faith Incremental'! | PlaceId: 94264573845314")
@@ -555,7 +555,7 @@ do
     end
 
     function templeServiceFunctions.areAllCurrencyTemplesCompleted()
-        return TempleServiceClient.AreAllCurrencyTemplesCompleted()
+        return TempleServiceClient.AreAllCurrencyTemplesComplete()
     end
 
     function templeServiceFunctions.requestBuildTemple(id)
@@ -1181,6 +1181,100 @@ do
 
         return imageLabel
     end
+
+    function uiCreationFunctions.constructMainFrame(options)
+        options = functions.Validate({
+            Parent = nil;
+            Title = "Side Frame";
+            Visible = false;
+            ScrollBarThickness = 6;
+            CanvasSizeYScale = 5;
+        }, options)
+
+        if options["Parent"] == nil then return nil end
+
+        local scrollingFrame = Instance.new("ScrollingFrame", options["Parent"])
+        scrollingFrame.Name = options["Title"]
+        scrollingFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+        scrollingFrame.BackgroundTransparency = 1
+        scrollingFrame.Position = UDim2.fromScale(0.5, 0.5)
+        scrollingFrame.Size = UDim2.fromScale(0.9, 0.9)
+        scrollingFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+        scrollingFrame.ScrollBarThickness = options["ScrollBarThickness"]
+        scrollingFrame.CanvasSize = UDim2.fromScale(0, options["CanvasSizeYScale"])
+        scrollingFrame.Visible = options["Visible"]
+
+        local uiListLayoutFrame = Instance.new("UIListLayout", scrollingFrame)
+        uiListLayoutFrame.Padding = UDim.new(0.005, 0)
+        uiListLayoutFrame.FillDirection = Enum.FillDirection.Vertical
+        uiListLayoutFrame.SortOrder = Enum.SortOrder.LayoutOrder
+        uiListLayoutFrame.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        uiListLayoutFrame.VerticalAlignment = Enum.VerticalAlignment.Top
+
+        return scrollingFrame
+    end
+
+    function uiCreationFunctions.constructSideFrame(options)
+        options = functions.Validate({
+            Parent = nil;
+            Title = "Side Frame";
+            Visible = false;
+            ScrollBarThickness = 6;
+            CanvasSizeYScale = 5;
+        }, options)
+
+        if options["Parent"] == nil then return nil, nil end
+
+        local Frame = Instance.new("Frame", options["Parent"])
+        Frame.Name = options["Title"]
+        Frame.AnchorPoint = Vector2.new(1, 0.5)
+        Frame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+        Frame.BackgroundTransparency = 0.6
+        Frame.Position = UDim2.fromScale(-0.185, 0.5)
+        Frame.Size = UDim2.fromScale(0.9, 0.9)
+        Frame.Visible = options["Visible"]
+        uiCreationFunctions.constructUIStroke({
+            ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+            LineJoinMode = Enum.LineJoinMode.Miter;
+            StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize;
+            Thickness = 0.023;
+            Parent = Frame;
+        })
+
+        local scrollFrame = Instance.new("ScrollingFrame", Frame)
+        scrollFrame.Name = "Container"
+        scrollFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+        scrollFrame.BackgroundTransparency = 1
+        scrollFrame.Position = UDim2.fromScale(0.5, 0.5)
+        scrollFrame.Size = UDim2.fromScale(1, 1)
+        scrollFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
+        scrollFrame.ScrollBarThickness = options["ScrollBarThickness"]
+        scrollFrame.CanvasSize = UDim2.fromScale(0, options["CanvasSizeYScale"])
+
+        local uiCorner = Instance.new("UICorner", Frame)
+        uiCorner.CornerRadius = UDim.new(0.05, 0)
+
+        local uiListLayout = Instance.new("UIListLayout", scrollFrame)
+        uiListLayout.Padding = UDim.new(0.005, 0)
+        uiListLayout.FillDirection = Enum.FillDirection.Vertical
+        uiListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+        uiListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+        uiListLayout.VerticalAlignment = Enum.VerticalAlignment.Top
+
+        local Title = uiCreationFunctions.constructTextLabel({
+            Parent = Frame;
+            AnchorPoint = Vector2.new(0, 1);
+            Position = UDim2.fromScale(0, -0.05);
+            Size = UDim2.fromScale(0.9, 0.1);
+            Text = options["Title"];
+            TextXAlignment = Enum.TextXAlignment.Left;
+        })
+
+        uiCreationFunctions.constructUiAspect({Parent = Title; AspectRatio = 9.933})
+        uiCreationFunctions.constructUiAspect({Parent = Frame; AspectRatio = 1.104})
+
+        return Frame, scrollFrame
+    end
 end
 
 -------------------->> Main Creation <<--------------------
@@ -1190,441 +1284,380 @@ ScreenGui.Name = "Incremental-Farm-Toggle"
 ScreenGui.ResetOnSpawn = false
 ScreenGui.DisplayOrder = 99999999999
 
--------------------->> Main Frame <<--------------------
+local Frames = {}
+local scrollingFrames = {}
+local Titles = {
+    mainFrame = "Faith Incremental";
+    easterFrame = "Easter";
+}
 
-local backFrame = Instance.new("Frame", ScreenGui)
-backFrame.Name = "Frame"
-backFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-backFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-backFrame.BackgroundTransparency = 0.6
-backFrame.Position = UDim2.fromScale(0.5, 0.5)
-backFrame.Size = UDim2.fromScale(0.235, 0.4)
-functions.Draggable(backFrame, ScreenGui)
-uiCreationFunctions.constructUIStroke({
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-    LineJoinMode = Enum.LineJoinMode.Miter;
-    StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize;
-    Thickness = 0.023;
-    Parent = backFrame;
-})
+do
+    Frames.mainFrame = Instance.new("Frame", ScreenGui)
+    Frames.mainFrame.Name = "Frame"
+    Frames.mainFrame.AnchorPoint = Vector2.new(0.5, 0.5)
+    Frames.mainFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Frames.mainFrame.BackgroundTransparency = 0.6
+    Frames.mainFrame.Position = UDim2.fromScale(0.5, 0.5)
+    Frames.mainFrame.Size = UDim2.fromScale(0.235, 0.4)
+    functions.Draggable(Frames.mainFrame, ScreenGui)
+    uiCreationFunctions.constructUIStroke({
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
+        LineJoinMode = Enum.LineJoinMode.Miter;
+        StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize;
+        Thickness = 0.023;
+        Parent = Frames.mainFrame;
+    })
 
-local Frame = Instance.new("ScrollingFrame", backFrame)
-Frame.Name = "Container"
-Frame.AnchorPoint = Vector2.new(0.5, 0.5)
-Frame.BackgroundTransparency = 1
-Frame.Position = UDim2.fromScale(0.5, 0.5)
-Frame.Size = UDim2.fromScale(0.9, 0.9)
-Frame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-Frame.ScrollBarThickness = 6
-Frame.CanvasSize = UDim2.fromScale(0, 5)
+    local uiCorner = Instance.new("UICorner", Frames.mainFrame)
+    uiCorner.CornerRadius = UDim.new(0.05, 0)
 
-local uiCornerFrame = Instance.new("UICorner", backFrame)
-uiCornerFrame.CornerRadius = UDim.new(0.05, 0)
+    Frames.Title = uiCreationFunctions.constructTextLabel({
+        Parent = Frames.mainFrame;
+        AnchorPoint = Vector2.new(0, 1);
+        Position = UDim2.fromScale(0, -0.05);
+        Size = UDim2.fromScale(0.9, 0.1);
+        Text = "Faith Incremental";
+        TextXAlignment = Enum.TextXAlignment.Left;
+    })
 
-local uiListLayoutFrame = Instance.new("UIListLayout", Frame)
-uiListLayoutFrame.Padding = UDim.new(0.005, 0)
-uiListLayoutFrame.FillDirection = Enum.FillDirection.Vertical
-uiListLayoutFrame.SortOrder = Enum.SortOrder.LayoutOrder
-uiListLayoutFrame.HorizontalAlignment = Enum.HorizontalAlignment.Center
-uiListLayoutFrame.VerticalAlignment = Enum.VerticalAlignment.Top
+    uiCreationFunctions.constructUiAspect({Parent = Frames.Title; AspectRatio = 9.933})
+    uiCreationFunctions.constructUiAspect({Parent = Frames.mainFrame; AspectRatio = 1.104})
+end
 
-local Folder = Instance.new("Folder", backFrame)
-Folder.Name = "Ignore"
+local mainFramesHolder = Instance.new("Folder", Frames.mainFrame)
 
-local TitleFrame = uiCreationFunctions.constructTextLabel({
-    Parent = backFrame;
-    AnchorPoint = Vector2.new(0, 1);
-    Position = UDim2.fromScale(0, -0.05);
-    Size = UDim2.fromScale(0.9, 0.1);
-    Text = "Faith Incremental";
-    TextXAlignment = Enum.TextXAlignment.Left;
-})
+-------------------->> Frames <<--------------------
 
-uiCreationFunctions.constructUiAspect({Parent = TitleFrame; AspectRatio = 9.933})
-uiCreationFunctions.constructUiAspect({Parent = backFrame; AspectRatio = 1.104})
+do
+    scrollingFrames.mainFrame = uiCreationFunctions.constructMainFrame({
+        Parent = mainFramesHolder;
+        Title = Titles.mainFrame;
+        Visible = true;
+    })
 
--------------------->> Settings Frame <<--------------------
+    scrollingFrames.easterFrame = uiCreationFunctions.constructMainFrame({
+        Parent = mainFramesHolder;
+        Title = Titles.easterFrame;
+    })
 
-local backSettingsFrame = Instance.new("Frame", backFrame)
-backSettingsFrame.Name = "settings"
-backSettingsFrame.AnchorPoint = Vector2.new(1, 0.5)
-backSettingsFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-backSettingsFrame.BackgroundTransparency = 0.6
-backSettingsFrame.Position = UDim2.fromScale(-0.185, 0.5)
-backSettingsFrame.Size = UDim2.fromScale(0.9, 0.9)
-backSettingsFrame.Visible = false
-uiCreationFunctions.constructUIStroke({
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-    LineJoinMode = Enum.LineJoinMode.Miter;
-    StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize;
-    Thickness = 0.023;
-    Parent = backSettingsFrame;
-})
+    Frames.settingsFrame, scrollingFrames.settingsFrame = uiCreationFunctions.constructSideFrame({
+        Parent = Frames.mainFrame;
+        Title = "Settings";
+    })
 
-local settingsFrame = Instance.new("ScrollingFrame", backSettingsFrame)
-settingsFrame.Name = "Container"
-settingsFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-settingsFrame.BackgroundTransparency = 1
-settingsFrame.Position = UDim2.fromScale(0.5, 0.5)
-settingsFrame.Size = UDim2.fromScale(1, 1)
-settingsFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-settingsFrame.ScrollBarThickness = 6
-settingsFrame.CanvasSize = UDim2.fromScale(0, 4)
-
-local uiCornerSettings = Instance.new("UICorner", backSettingsFrame)
-uiCornerSettings.CornerRadius = UDim.new(0.05, 0)
-
-local uiListLayoutSettings = Instance.new("UIListLayout", settingsFrame)
-uiListLayoutSettings.Padding = UDim.new(0.005, 0)
-uiListLayoutSettings.FillDirection = Enum.FillDirection.Vertical
-uiListLayoutSettings.SortOrder = Enum.SortOrder.LayoutOrder
-uiListLayoutSettings.HorizontalAlignment = Enum.HorizontalAlignment.Center
-uiListLayoutSettings.VerticalAlignment = Enum.VerticalAlignment.Top
-
-local FolderSettings = Instance.new("Folder", backSettingsFrame)
-FolderSettings.Name = "Ignore"
-
-local TitleSettings = uiCreationFunctions.constructTextLabel({
-    Parent = backSettingsFrame;
-    AnchorPoint = Vector2.new(0, 1);
-    Position = UDim2.fromScale(0, -0.05);
-    Size = UDim2.fromScale(0.9, 0.1);
-    Text = "Settings";
-    TextXAlignment = Enum.TextXAlignment.Left;
-})
-
-uiCreationFunctions.constructUiAspect({Parent = TitleSettings; AspectRatio = 9.933})
-uiCreationFunctions.constructUiAspect({Parent = backSettingsFrame; AspectRatio = 1.104})
-
--------------------->> Upgrades Frame <<--------------------
-
-local backUpgradesFrame = Instance.new("Frame", backFrame)
-backUpgradesFrame.Name = "upgrades"
-backUpgradesFrame.AnchorPoint = Vector2.new(1, 0.5)
-backUpgradesFrame.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-backUpgradesFrame.BackgroundTransparency = 0.6
-backUpgradesFrame.Position = UDim2.fromScale(-0.185, 0.5)
-backUpgradesFrame.Size = UDim2.fromScale(0.9, 0.9)
-backUpgradesFrame.Visible = false
-uiCreationFunctions.constructUIStroke({
-    ApplyStrokeMode = Enum.ApplyStrokeMode.Border;
-    LineJoinMode = Enum.LineJoinMode.Miter;
-    StrokeSizingMode = Enum.StrokeSizingMode.ScaledSize;
-    Thickness = 0.023;
-    Parent = backUpgradesFrame;
-})
-
-local upgradesFrame = Instance.new("ScrollingFrame", backUpgradesFrame)
-upgradesFrame.Name = "Container"
-upgradesFrame.AnchorPoint = Vector2.new(0.5, 0.5)
-upgradesFrame.BackgroundTransparency = 1
-upgradesFrame.Position = UDim2.fromScale(0.5, 0.5)
-upgradesFrame.Size = UDim2.fromScale(1, 1)
-upgradesFrame.ScrollBarImageColor3 = Color3.fromRGB(255, 255, 255)
-upgradesFrame.ScrollBarThickness = 6
-upgradesFrame.CanvasSize = UDim2.fromScale(0, 5)
-
-local uiCornerUpgrades = Instance.new("UICorner", backUpgradesFrame)
-uiCornerUpgrades.CornerRadius = UDim.new(0.05, 0)
-
-local uiListLayoutUpgrades = Instance.new("UIListLayout", upgradesFrame)
-uiListLayoutUpgrades.Padding = UDim.new(0.005, 0)
-uiListLayoutUpgrades.FillDirection = Enum.FillDirection.Vertical
-uiListLayoutUpgrades.SortOrder = Enum.SortOrder.LayoutOrder
-uiListLayoutUpgrades.HorizontalAlignment = Enum.HorizontalAlignment.Center
-uiListLayoutUpgrades.VerticalAlignment = Enum.VerticalAlignment.Top
-
-local FolderUpgrades = Instance.new("Folder", backUpgradesFrame)
-FolderUpgrades.Name = "Ignore"
-
-local TitleUpgrades = uiCreationFunctions.constructTextLabel({
-    Parent = backUpgradesFrame;
-    AnchorPoint = Vector2.new(0, 1);
-    Position = UDim2.fromScale(0, -0.05);
-    Size = UDim2.fromScale(0.9, 0.1);
-    Text = "Upgrades";
-    TextXAlignment = Enum.TextXAlignment.Left;
-})
-
-uiCreationFunctions.constructUiAspect({Parent = TitleUpgrades; AspectRatio = 9.933})
-uiCreationFunctions.constructUiAspect({Parent = backUpgradesFrame; AspectRatio = 1.104})
-
+    Frames.upgradesFrame, scrollingFrames.upgradesFrame = uiCreationFunctions.constructSideFrame({
+        Parent = Frames.mainFrame;
+        Title = "Upgrades";
+    })
+end
 -------------------->> Close Buttons <<--------------------
 
-local closeButton = uiCreationFunctions.constructImageButton({
-    Parent = backFrame;
-    Position = UDim2.fromScale(1.012, 0);
-    Size = UDim2.new(1, 0, 0.06, 45);
-    Text = "X";
-    Gradient = gradients.red;
-})
-uiCreationFunctions.constructUiAspect({Parent = closeButton})
+local closeButtons = {}
 
-local closeButtonSettings = uiCreationFunctions.constructImageButton({
-    Parent = backSettingsFrame;
-    Position = UDim2.fromScale(1.012, 0);
-    Size = UDim2.new(1, 0, 0.06, 45);
-    Text = "X";
-    Gradient = gradients.red;
-})
-uiCreationFunctions.constructUiAspect({Parent = closeButtonSettings})
+do
+    closeButtons.closeButton = uiCreationFunctions.constructImageButton({
+        Parent = Frames.mainFrame;
+        Position = UDim2.fromScale(1.012, 0);
+        Size = UDim2.new(1, 0, 0.06, 45);
+        Text = "X";
+        Gradient = gradients.red;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = closeButtons.closeButton})
 
-local closeButtonUpgrades = uiCreationFunctions.constructImageButton({
-    Parent = backUpgradesFrame;
-    Position = UDim2.fromScale(1.012, 0);
-    Size = UDim2.new(1, 0, 0.06, 45);
-    Text = "X";
-    Gradient = gradients.red;
-})
-uiCreationFunctions.constructUiAspect({Parent = closeButtonUpgrades})
+    closeButtons.closeButtonSettings = uiCreationFunctions.constructImageButton({
+        Parent = Frames.settingsFrame;
+        Position = UDim2.fromScale(1.012, 0);
+        Size = UDim2.new(1, 0, 0.06, 45);
+        Text = "X";
+        Gradient = gradients.red;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = closeButtons.closeButtonSettings})
+
+    closeButtons.closeButtonUpgrades = uiCreationFunctions.constructImageButton({
+        Parent = Frames.upgradesFrame;
+        Position = UDim2.fromScale(1.012, 0);
+        Size = UDim2.new(1, 0, 0.06, 45);
+        Text = "X";
+        Gradient = gradients.red;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = closeButtons.closeButtonUpgrades})
+end
 
 -------------------->> Side Buttons <<--------------------
 
-local settingsButton = uiCreationFunctions.constructImageButton2({
-    Parent = backFrame;
-    Position = UDim2.fromScale(1.012, 0.27);
-    Gradient = gradients.gray;
-})
-uiCreationFunctions.constructImageLabel({Parent = settingsButton; Image = "rbxassetid://74669737175882";})
-uiCreationFunctions.constructUiAspect({Parent = settingsButton})
+local sideButtons = {}
 
-local rebirthButton = uiCreationFunctions.constructImageButton2({
-    Parent = backFrame;
-    Position = UDim2.fromScale(1.012, 0.52);
-    Gradient = gradients.gray;
-})
-uiCreationFunctions.constructImageLabel({Parent = rebirthButton; Image = "rbxassetid://129348613616339";})
-uiCreationFunctions.constructUiAspect({Parent = rebirthButton})
+do
+    sideButtons.settingsButton = uiCreationFunctions.constructImageButton2({
+        Parent = Frames.mainFrame;
+        Position = UDim2.fromScale(1.012, 0.27);
+        Gradient = gradients.gray;
+    })
+    uiCreationFunctions.constructImageLabel({Parent = sideButtons.settingsButton; Image = "rbxassetid://74669737175882";})
+    uiCreationFunctions.constructUiAspect({Parent = sideButtons.settingsButton})
 
-local upgradesButton = uiCreationFunctions.constructImageButton2({
-    Parent = backFrame;
-    Position = UDim2.fromScale(1.012, 0.77);
-    Gradient = gradients.gray;
-})
-uiCreationFunctions.constructImageLabel({Parent = upgradesButton; Image = "rbxassetid://126864380733796";})
-uiCreationFunctions.constructUiAspect({Parent = upgradesButton})
+    sideButtons.rebirthButton = uiCreationFunctions.constructImageButton2({
+        Parent = Frames.mainFrame;
+        Position = UDim2.fromScale(1.012, 0.52);
+        Gradient = gradients.gray;
+    })
+    uiCreationFunctions.constructImageLabel({Parent = sideButtons.rebirthButton; Image = "rbxassetid://129348613616339";})
+    uiCreationFunctions.constructUiAspect({Parent = sideButtons.rebirthButton})
+
+    sideButtons.upgradesButton = uiCreationFunctions.constructImageButton2({
+        Parent = Frames.mainFrame;
+        Position = UDim2.fromScale(1.012, 0.77);
+        Gradient = gradients.gray;
+    })
+    uiCreationFunctions.constructImageLabel({Parent = sideButtons.upgradesButton; Image = "rbxassetid://126864380733796";})
+    uiCreationFunctions.constructUiAspect({Parent = sideButtons.upgradesButton})
+end
 
 -------------------->> Settings Frame <<--------------------
 
-local rebirthIfUnAffButton, rebirthIfUnAffFunctions = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Auto Rebirth for Elite Spirts: "..functions.GetTextFromSetting("rebirthIfUnAff");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("rebirthIfUnAff"));
-    LayoutOrder = 1;
-})
-uiCreationFunctions.constructUiAspect({Parent = rebirthIfUnAffButton; AspectRatio = 2.854})
+local settingsFrameButtons = {}
+local settingsFrameFunctions = {}
 
-local autoBuyTrialShopButton, autoBuyTrialShopFunctions = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Auto Buy Trial Shop: "..functions.GetTextFromSetting("autoBuyTrialShop");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBuyTrialShop"));
-    LayoutOrder = 2;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoBuyTrialShopButton; AspectRatio = 2.854})
+do
+    settingsFrameButtons.rebirthIfUnAffButton, settingsFrameFunctions.rebirthIfUnAffFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Auto Rebirth for Elite Spirts: "..functions.GetTextFromSetting("rebirthIfUnAff");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("rebirthIfUnAff"));
+        LayoutOrder = 1;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.rebirthIfUnAffButton; AspectRatio = 2.854})
 
-local autoRadianceBoostButton, autoRadianceBoostFunctions = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Auto Radiance Boost When Max: "..functions.GetTextFromSetting("autoRadianceBoostWhenMax");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRadianceBoostWhenMax"));
-    LayoutOrder = 3;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoRadianceBoostButton; AspectRatio = 2.854})
+    settingsFrameButtons.autoBuyTrialShopButton, settingsFrameFunctions.autoBuyTrialShopFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Auto Buy Trial Shop: "..functions.GetTextFromSetting("autoBuyTrialShop");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBuyTrialShop"));
+        LayoutOrder = 2;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.autoBuyTrialShopButton; AspectRatio = 2.854})
 
-local autoAscendButton, autoAscendFunctions = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Auto Ascend: "..functions.GetTextFromSetting("autoAscend");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoAscend"));
-    LayoutOrder = 4;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoAscendButton; AspectRatio = 2.854})
+    settingsFrameButtons.autoRadianceBoostButton, settingsFrameFunctions.autoRadianceBoostFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Auto Radiance Boost When Max: "..functions.GetTextFromSetting("autoRadianceBoostWhenMax");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRadianceBoostWhenMax"));
+        LayoutOrder = 3;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.autoRadianceBoostButton; AspectRatio = 2.854})
 
-local ascendButton = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Ascend";
-    Gradient = gradients.cyan;
-    LayoutOrder = 998;
-})
-uiCreationFunctions.constructUiAspect({Parent = ascendButton; AspectRatio = 2.854})
+    settingsFrameButtons.autoAscendButton, settingsFrameFunctions.autoAscendFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Auto Ascend: "..functions.GetTextFromSetting("autoAscend");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoAscend"));
+        LayoutOrder = 4;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.autoAscendButton; AspectRatio = 2.854})
 
-local copyScriptButton = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Copy Script";
-    Gradient = gradients.cyan;
-    LayoutOrder = 999;
-})
-uiCreationFunctions.constructUiAspect({Parent = copyScriptButton; AspectRatio = 2.854})
+    settingsFrameButtons.ascendButton = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Ascend";
+        Gradient = gradients.cyan;
+        LayoutOrder = 998;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.ascendButton; AspectRatio = 2.854})
 
-local queueOnTeleportButton = uiCreationFunctions.constructImageButton({
-    Parent = settingsFrame;
-    Text = "Queue on Teleport";
-    Gradient = gradients.cyan;
-    LayoutOrder = 1000;
-})
-uiCreationFunctions.constructUiAspect({Parent = queueOnTeleportButton; AspectRatio = 2.854})
+    settingsFrameButtons.copyScriptButton = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Copy Script";
+        Gradient = gradients.cyan;
+        LayoutOrder = 999;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.copyScriptButton; AspectRatio = 2.854})
+
+    settingsFrameButtons.queueOnTeleportButton = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.settingsFrame;
+        Text = "Queue on Teleport";
+        Gradient = gradients.cyan;
+        LayoutOrder = 1000;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = settingsFrameButtons.queueOnTeleportButton; AspectRatio = 2.854})
+end
 
 -------------------->> Upgrades Frame <<--------------------
 
-local autoZone1Button, autoZone1Functions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Zone 1: "..functions.GetTextFromSetting("autoZone1");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone1"));
-    LayoutOrder = 0;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoZone1Button; AspectRatio = 2.854})
+local upgradesFrameButtons = {}
+local upgradesFrameFunctions = {}
 
-local autoZone2Button, autoZone2Functions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Zone 2: "..functions.GetTextFromSetting("autoZone2");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone2"));
-    LayoutOrder = 1;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoZone2Button; AspectRatio = 2.854})
+do
+    upgradesFrameButtons.autoZone1Button, upgradesFrameFunctions.autoZone1Functions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Zone 1: "..functions.GetTextFromSetting("autoZone1");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone1"));
+        LayoutOrder = 0;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoZone1Button; AspectRatio = 2.854})
 
-local autoZone3NoEliteSoulsButton, autoZone3NoEliteSoulsFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Zone 3 No Elite Souls: "..functions.GetTextFromSetting("autoZone3NoEliteSouls");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone3NoEliteSouls"));
-    LayoutOrder = 2;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoZone3NoEliteSoulsButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoZone2Button, upgradesFrameFunctions.autoZone2Functions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Zone 2: "..functions.GetTextFromSetting("autoZone2");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone2"));
+        LayoutOrder = 1;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoZone2Button; AspectRatio = 2.854})
 
-local autoZone3EliteSoulsButton, autoZone3EliteSoulsFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Zone 3 Elite Souls: "..functions.GetTextFromSetting("autoZone3EliteSouls");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone3EliteSouls"));
-    LayoutOrder = 3;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoZone3EliteSoulsButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoZone3NoEliteSoulsButton, upgradesFrameFunctions.autoZone3NoEliteSoulsFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Zone 3 No Elite Souls: "..functions.GetTextFromSetting("autoZone3NoEliteSouls");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone3NoEliteSouls"));
+        LayoutOrder = 2;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoZone3NoEliteSoulsButton; AspectRatio = 2.854})
 
-local autoSoulTempleButton, autoSoulTempleFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple"));
-    LayoutOrder = 4;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoSoulTempleButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoZone3EliteSoulsButton, upgradesFrameFunctions.autoZone3EliteSoulsFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Zone 3 Elite Souls: "..functions.GetTextFromSetting("autoZone3EliteSouls");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoZone3EliteSouls"));
+        LayoutOrder = 3;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoZone3EliteSoulsButton; AspectRatio = 2.854})
 
-local autoRelicTempleButton, autoRelicTempleFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple"));
-    LayoutOrder = 5;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoRelicTempleButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoSoulTempleButton, upgradesFrameFunctions.autoSoulTempleFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple"));
+        LayoutOrder = 4;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoSoulTempleButton; AspectRatio = 2.854})
 
-local autoBibleTempleButton, autoBibleTempleFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple"));
-    LayoutOrder = 6;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoBibleTempleButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoRelicTempleButton, upgradesFrameFunctions.autoRelicTempleFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple"));
+        LayoutOrder = 5;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoRelicTempleButton; AspectRatio = 2.854})
 
-local autoSoulDPBoardButton, autoSoulDPBoardFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard"));
-    LayoutOrder = 7;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoSoulDPBoardButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoBibleTempleButton, upgradesFrameFunctions.autoBibleTempleFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple"));
+        LayoutOrder = 6;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoBibleTempleButton; AspectRatio = 2.854})
 
-local autoRelicDPBoardButton, autoRelicDPBoardFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard"));
-    LayoutOrder = 8;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoRelicDPBoardButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoSoulDPBoardButton, upgradesFrameFunctions.autoSoulDPBoardFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard"));
+        LayoutOrder = 7;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoSoulDPBoardButton; AspectRatio = 2.854})
 
-local autoBibleDPBoardButton, autoBibleDPBoardFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard"));
-    LayoutOrder = 9;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoBibleDPBoardButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoRelicDPBoardButton, upgradesFrameFunctions.autoRelicDPBoardFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard"));
+        LayoutOrder = 8;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoRelicDPBoardButton; AspectRatio = 2.854})
 
-local autoDepositMainTempleButton, autoDepositMainTempleFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple"));
-    LayoutOrder = 10;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoDepositMainTempleButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoBibleDPBoardButton, upgradesFrameFunctions.autoBibleDPBoardFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard"));
+        LayoutOrder = 9;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoBibleDPBoardButton; AspectRatio = 2.854})
 
-local autoHellStairsNodesButton, autoHellStairsNodesFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Hell Stairs Nodes: "..functions.GetTextFromSetting("autoHellStairsNodes");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoHellStairsNodes"));
-    LayoutOrder = 11;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoHellStairsNodesButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoDepositMainTempleButton, upgradesFrameFunctions.autoDepositMainTempleFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple"));
+        LayoutOrder = 10;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoDepositMainTempleButton; AspectRatio = 2.854})
 
-local autoStairwayNodesButton, autoStairwayNodesFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Stairway Nodes: "..functions.GetTextFromSetting("autoStairwayNodes");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoStairwayNodes"));
-    LayoutOrder = 12;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoStairwayNodesButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoHellStairsNodesButton, upgradesFrameFunctions.autoHellStairsNodesFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Hell Stairs Nodes: "..functions.GetTextFromSetting("autoHellStairsNodes");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoHellStairsNodes"));
+        LayoutOrder = 11;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoHellStairsNodesButton; AspectRatio = 2.854})
 
-local autoUnderworldButton, autoUnderworldFunctions = uiCreationFunctions.constructImageButton({
-    Parent = upgradesFrame;
-    Text = "Auto Underworld: "..functions.GetTextFromSetting("autoUnderworld");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoUnderworld"));
-    LayoutOrder = 13;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoUnderworldButton; AspectRatio = 2.854})
+    upgradesFrameButtons.autoStairwayNodesButton, upgradesFrameFunctions.autoStairwayNodesFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Stairway Nodes: "..functions.GetTextFromSetting("autoStairwayNodes");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoStairwayNodes"));
+        LayoutOrder = 12;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoStairwayNodesButton; AspectRatio = 2.854})
+
+    upgradesFrameButtons.autoUnderworldButton, upgradesFrameFunctions.autoUnderworldFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.upgradesFrame;
+        Text = "Auto Underworld: "..functions.GetTextFromSetting("autoUnderworld");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoUnderworld"));
+        LayoutOrder = 13;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = upgradesFrameButtons.autoUnderworldButton; AspectRatio = 2.854})
+end
 
 -------------------->> Main Frame <<--------------------
 
-local farmSpiritsButton, farmSpiritsFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Farm Spirits: "..functions.GetTextFromSetting("FarmSpirits");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmSpirits"));
-    LayoutOrder = 0;
-})
-uiCreationFunctions.constructUiAspect({Parent = farmSpiritsButton; AspectRatio = 2.854})
+local mainFrameButtons = {}
+local mainFrameFunctions = {}
 
-local spawnEliteSpiritButton, spawnEliteSpiritFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Auto Spawn Elite: "..functions.GetTextFromSetting("autoSpawnEliteSpirit");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSpawnEliteSpirit"));
-    LayoutOrder = 1;
-})
-uiCreationFunctions.constructUiAspect({Parent = spawnEliteSpiritButton; AspectRatio = 2.854})
+do
+    mainFrameButtons.farmSpiritsButton, mainFrameFunctions.farmSpiritsFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Farm Spirits: "..functions.GetTextFromSetting("FarmSpirits");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmSpirits"));
+        LayoutOrder = 0;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.farmSpiritsButton; AspectRatio = 2.854})
 
-local farmBossSpiritButton, farmBossSpiritFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Farm Trial: "..functions.GetTextFromSetting("FarmBossSpirit");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmBossSpirit"));
-    LayoutOrder = 2;
-})
-uiCreationFunctions.constructUiAspect({Parent = farmBossSpiritButton, AspectRatio = 2.854})
+    mainFrameButtons.spawnEliteSpiritButton, mainFrameFunctions.spawnEliteSpiritFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Auto Spawn Elite: "..functions.GetTextFromSetting("autoSpawnEliteSpirit");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoSpawnEliteSpirit"));
+        LayoutOrder = 1;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.spawnEliteSpiritButton; AspectRatio = 2.854})
 
-local farmSurgeButton, farmSurgeFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Farm Surge: "..functions.GetTextFromSetting("FarmSurge");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmSurge"));
-    LayoutOrder = 3;
-})
-uiCreationFunctions.constructUiAspect({Parent = farmSurgeButton; AspectRatio = 2.854})
+    mainFrameButtons.farmBossSpiritButton, mainFrameFunctions.farmBossSpiritFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Farm Trial: "..functions.GetTextFromSetting("FarmBossSpirit");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmBossSpirit"));
+        LayoutOrder = 2;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.farmBossSpiritButton, AspectRatio = 2.854})
 
-local autoReincarnateButton, autoReincarnateFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Auto Reincarnate: "..functions.GetTextFromSetting("autoReincarnate");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoReincarnate"));
-    LayoutOrder = 4;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoReincarnateButton; AspectRatio = 2.854})
+    mainFrameButtons.farmSurgeButton, mainFrameFunctions.farmSurgeFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Farm Surge: "..functions.GetTextFromSetting("FarmSurge");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("FarmSurge"));
+        LayoutOrder = 3;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.farmSurgeButton; AspectRatio = 2.854})
 
-local autoClickRelicButton, autoClickRelicFunctions = uiCreationFunctions.constructImageButton({
-    Parent = Frame;
-    Text = "Auto Click Relic: "..functions.GetTextFromSetting("autoClickRelic");
-    Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoClickRelic"));
-    LayoutOrder = 5;
-})
-uiCreationFunctions.constructUiAspect({Parent = autoClickRelicButton; AspectRatio = 2.854})
+    mainFrameButtons.autoReincarnateButton, mainFrameFunctions.autoReincarnateFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Auto Reincarnate: "..functions.GetTextFromSetting("autoReincarnate");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoReincarnate"));
+        LayoutOrder = 4;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.autoReincarnateButton; AspectRatio = 2.854})
+
+    mainFrameButtons.autoClickRelicButton, mainFrameFunctions.autoClickRelicFunctions = uiCreationFunctions.constructImageButton({
+        Parent = scrollingFrames.mainFrame;
+        Text = "Auto Click Relic: "..functions.GetTextFromSetting("autoClickRelic");
+        Gradient = uiCreationFunctions.getGradient(functions.GetSetting("autoClickRelic"));
+        LayoutOrder = 5;
+    })
+    uiCreationFunctions.constructUiAspect({Parent = mainFrameButtons.autoClickRelicButton; AspectRatio = 2.854})
+end
+
+-------------------->> Easter Frame <<--------------------
+
+local easterFrameButtons = {}
+local easterFrameFunctions = {}
+
+do
+    -- Add later
+end
 
 -------------------->> UI Protection <<--------------------
 
@@ -1655,8 +1688,8 @@ local mainFunctions = {}
 do
     function mainFunctions.autoFarmSpirits()
         functions.SetSetting("FarmSpirits", not functions.GetSetting("FarmSpirits"))
-        farmSpiritsFunctions:updateText("Farm Spirits: "..functions.GetTextFromSetting("FarmSpirits"))
-        farmSpiritsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmSpirits")))
+        mainFrameFunctions.farmSpiritsFunctions:updateText("Farm Spirits: "..functions.GetTextFromSetting("FarmSpirits"))
+        mainFrameFunctions.farmSpiritsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmSpirits")))
 
         local function fightSpirit()
             if gameFunctions.getSpirit() ~= nil and functions.GetSetting("FarmSpirits") == true then
@@ -1691,8 +1724,8 @@ do
 
     function mainFunctions.autoSpawnEliteSpirit()
         functions.SetSetting("autoSpawnEliteSpirit", not functions.GetSetting("autoSpawnEliteSpirit"))
-        spawnEliteSpiritFunctions:updateText("Auto Spawn Elite: "..functions.GetTextFromSetting("autoSpawnEliteSpirit"))
-        spawnEliteSpiritFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSpawnEliteSpirit")))
+        mainFrameFunctions.spawnEliteSpiritFunctions:updateText("Auto Spawn Elite: "..functions.GetTextFromSetting("autoSpawnEliteSpirit"))
+        mainFrameFunctions.spawnEliteSpiritFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSpawnEliteSpirit")))
 
         if functions.GetSetting("autoSpawnEliteSpirit") == true and typeof(firesignal) == "function" then
             functions.spawnElite()
@@ -1711,8 +1744,8 @@ do
 
     function mainFunctions.autoFarmBossSpirit()
         functions.SetSetting("FarmBossSpirit", not functions.GetSetting("FarmBossSpirit"))
-        farmBossSpiritFunctions:updateText("Farm Trial: "..functions.GetTextFromSetting("FarmBossSpirit"))
-        farmBossSpiritFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmBossSpirit")))
+        mainFrameFunctions.farmBossSpiritFunctions:updateText("Farm Trial: "..functions.GetTextFromSetting("FarmBossSpirit"))
+        mainFrameFunctions.farmBossSpiritFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmBossSpirit")))
 
         local function fightBoss()
             if gameFunctions.getBoss() ~= nil then
@@ -1761,8 +1794,8 @@ do
 
     function mainFunctions.autoFarmSurge()
         functions.SetSetting("FarmSurge", not functions.GetSetting("FarmSurge"))
-        farmSurgeFunctions:updateText("Farm Surge: "..functions.GetTextFromSetting("FarmSurge"))
-        farmSurgeFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmSurge")))
+        mainFrameFunctions.farmSurgeFunctions:updateText("Farm Surge: "..functions.GetTextFromSetting("FarmSurge"))
+        mainFrameFunctions.farmSurgeFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("FarmSurge")))
 
         local function farmSurge()
             if (emberServiceFunctions.isSurgeActive() == true and emberServiceFunctions.getSurgePosition() ~= nil) and functions.GetSetting("FarmSurge") == true then
@@ -1801,12 +1834,17 @@ do
 
     function mainFunctions.autoReincarnate()
         functions.SetSetting("autoReincarnate", not functions.GetSetting("autoReincarnate"))
-        autoReincarnateFunctions:updateText("Auto Reincarnate: "..functions.GetTextFromSetting("autoReincarnate"))
-        autoReincarnateFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoReincarnate")))
+        mainFrameFunctions.autoReincarnateFunctions:updateText("Auto Reincarnate: "..functions.GetTextFromSetting("autoReincarnate"))
+        mainFrameFunctions.autoReincarnateFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoReincarnate")))
 
         local function reincarnate()
             if reincarnationServiceFunctions.reincarnationIsMaxed() ~= true then
                 reincarnationServiceFunctions.RequestReincarnation()
+            else
+                functions.SetSetting("autoReincarnate", false)
+                mainFrameFunctions.autoReincarnateFunctions:updateText("Auto Reincarnate: "..functions.GetTextFromSetting("autoReincarnate"))
+                mainFrameFunctions.autoReincarnateFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoReincarnate")))
+                popupServiceFunctions.show({Text = "Reincarnation is Maxed! Auto Reincarnate disabled.", Duration = 5})
             end
         end
 
@@ -1822,8 +1860,8 @@ do
 
     function mainFunctions.autoClickRelic()
         functions.SetSetting("autoClickRelic", not functions.GetSetting("autoClickRelic"))
-        autoClickRelicFunctions:updateText("Auto Click Relic: "..functions.GetTextFromSetting("autoClickRelic"))
-        autoClickRelicFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoClickRelic")))
+        mainFrameFunctions.autoClickRelicFunctions:updateText("Auto Click Relic: "..functions.GetTextFromSetting("autoClickRelic"))
+        mainFrameFunctions.autoClickRelicFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoClickRelic")))
 
         if functions.GetSetting("autoClickRelic") == true then
             relicServiceFunctions.relicClick()
@@ -1843,14 +1881,14 @@ local settingsFunctions = {}
 do
     function settingsFunctions.autoRebirthIfUnAff()
         functions.SetSetting("rebirthIfUnAff", not functions.GetSetting("rebirthIfUnAff"))
-        rebirthIfUnAffFunctions:updateText("Auto Rebirth for Elite Spirts: "..functions.GetTextFromSetting("rebirthIfUnAff"))
-        rebirthIfUnAffFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("rebirthIfUnAff")))
+        settingsFrameFunctions.rebirthIfUnAffFunctions:updateText("Auto Rebirth for Elite Spirts: "..functions.GetTextFromSetting("rebirthIfUnAff"))
+        settingsFrameFunctions.rebirthIfUnAffFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("rebirthIfUnAff")))
     end
 
     function settingsFunctions.autoBuyTrialShop()
         functions.SetSetting("autoBuyTrialShop", not functions.GetSetting("autoBuyTrialShop"))
-        autoBuyTrialShopFunctions:updateText("Auto Buy Trial Shop: "..functions.GetTextFromSetting("autoBuyTrialShop"))
-        autoBuyTrialShopFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBuyTrialShop")))
+        settingsFrameFunctions.autoBuyTrialShopFunctions:updateText("Auto Buy Trial Shop: "..functions.GetTextFromSetting("autoBuyTrialShop"))
+        settingsFrameFunctions.autoBuyTrialShopFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBuyTrialShop")))
 
         if functions.GetSetting("autoBuyTrialShop") == true then
             trialShopServiceFunctions.buyOutTrialShop()
@@ -1864,8 +1902,8 @@ do
 
     function settingsFunctions.autoRadianceBoostWhenMax()
         functions.SetSetting("autoRadianceBoostWhenMax", not functions.GetSetting("autoRadianceBoostWhenMax"))
-        autoRadianceBoostFunctions:updateText("Auto Radiance Boost When Max: "..functions.GetTextFromSetting("autoRadianceBoostWhenMax"))
-        autoRadianceBoostFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRadianceBoostWhenMax")))
+        settingsFrameFunctions.autoRadianceBoostFunctions:updateText("Auto Radiance Boost When Max: "..functions.GetTextFromSetting("autoRadianceBoostWhenMax"))
+        settingsFrameFunctions.autoRadianceBoostFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRadianceBoostWhenMax")))
 
         local waitingTrue = false
 
@@ -1906,8 +1944,8 @@ do
 
     function settingsFunctions.autoAscend()
         functions.SetSetting("autoAscend", not functions.GetSetting("autoAscend"))
-        autoAscendFunctions:updateText("Auto Ascend: "..functions.GetTextFromSetting("autoAscend"))
-        autoAscendFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoAscend")))
+        settingsFrameFunctions.autoAscendFunctions:updateText("Auto Ascend: "..functions.GetTextFromSetting("autoAscend"))
+        settingsFrameFunctions.autoAscendFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoAscend")))
 
         local db = false
 
@@ -1923,7 +1961,7 @@ do
             db = false
         end
 
-        if functions.GetSetting("autoRadianceBoostWhenMax") == true then
+        if functions.GetSetting("autoAscend") == true then
             ascend()
 
             functions.NewConnection("StatServiceClient.StatChanged(SettingFrame)", StatServiceClient.StatChanged:Connect(function(stat, value)
@@ -1942,8 +1980,8 @@ local upgradeFunctions = {}
 do
     function upgradeFunctions.autoZone1()
         functions.SetSetting("autoZone1", not functions.GetSetting("autoZone1"))
-        autoZone1Functions:updateText("Auto Zone 1: "..functions.GetTextFromSetting("autoZone1"))
-        autoZone1Functions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone1")))
+        upgradesFrameFunctions.autoZone1Functions:updateText("Auto Zone 1: "..functions.GetTextFromSetting("autoZone1"))
+        upgradesFrameFunctions.autoZone1Functions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone1")))
 
         local db = false
 
@@ -2007,8 +2045,8 @@ do
 
     function upgradeFunctions.autoZone2()
         functions.SetSetting("autoZone2", not functions.GetSetting("autoZone2"))
-        autoZone2Functions:updateText("Auto Zone 2: "..functions.GetTextFromSetting("autoZone2"))
-        autoZone2Functions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone2")))
+        upgradesFrameFunctions.autoZone2Functions:updateText("Auto Zone 2: "..functions.GetTextFromSetting("autoZone2"))
+        upgradesFrameFunctions.autoZone2Functions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone2")))
 
         local db = false
 
@@ -2074,8 +2112,8 @@ do
 
     function upgradeFunctions.autoZone3NoEliteSouls()
         functions.SetSetting("autoZone3NoEliteSouls", not functions.GetSetting("autoZone3NoEliteSouls"))
-        autoZone3NoEliteSoulsFunctions:updateText("Auto Zone 3 No Elite Souls: "..functions.GetTextFromSetting("autoZone3NoEliteSouls"))
-        autoZone3NoEliteSoulsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone3NoEliteSouls")))
+        upgradesFrameFunctions.autoZone3NoEliteSoulsFunctions:updateText("Auto Zone 3 No Elite Souls: "..functions.GetTextFromSetting("autoZone3NoEliteSouls"))
+        upgradesFrameFunctions.autoZone3NoEliteSoulsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone3NoEliteSouls")))
 
         local db = false
 
@@ -2140,8 +2178,8 @@ do
 
     function upgradeFunctions.autoZone3EliteSouls()
         functions.SetSetting("autoZone3EliteSouls", not functions.GetSetting("autoZone3EliteSouls"))
-        autoZone3EliteSoulsFunctions:updateText("Auto Zone 3 Elite Souls: "..functions.GetTextFromSetting("autoZone3EliteSouls"))
-        autoZone3EliteSoulsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone3EliteSouls")))
+        upgradesFrameFunctions.autoZone3EliteSoulsFunctions:updateText("Auto Zone 3 Elite Souls: "..functions.GetTextFromSetting("autoZone3EliteSouls"))
+        upgradesFrameFunctions.autoZone3EliteSoulsFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoZone3EliteSouls")))
 
         local db = false
 
@@ -2197,8 +2235,8 @@ do
 
     function upgradeFunctions.autoSoulTemple()
         functions.SetSetting("autoSoulTemple", not functions.GetSetting("autoSoulTemple"))
-        autoSoulTempleFunctions:updateText("Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple"))
-        autoSoulTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple")))
+        upgradesFrameFunctions.autoSoulTempleFunctions:updateText("Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple"))
+        upgradesFrameFunctions.autoSoulTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple")))
 
         local db = false
 
@@ -2212,12 +2250,15 @@ do
 
             if templeServiceFunctions.getTempleLevel(TempleId.SoulsTemple) == templeServiceFunctions.getTempleConfig(TempleId.SoulsTemple).MaxLevel then
                 db = false
-                functions.SetSetting("autoSoulTemple", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoSoulTemple", false)
+                until functions.GetSetting("autoSoulTemple") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(4)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(4)")
                 end
-                autoSoulTempleFunctions:updateText("Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple"))
-                autoSoulTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple")))
+                upgradesFrameFunctions.autoSoulTempleFunctions:updateText("Auto Soul Temple: "..functions.GetTextFromSetting("autoSoulTemple"))
+                upgradesFrameFunctions.autoSoulTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulTemple")))
                 popupServiceFunctions.show({Text = "Soul Temple is Maxed! Auto Soul Temple disabled.", Duration = 5})
                 return
             end
@@ -2242,8 +2283,8 @@ do
 
     function upgradeFunctions.autoRelicTemple()
         functions.SetSetting("autoRelicTemple", not functions.GetSetting("autoRelicTemple"))
-        autoRelicTempleFunctions:updateText("Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple"))
-        autoRelicTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple")))
+        upgradesFrameFunctions.autoRelicTempleFunctions:updateText("Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple"))
+        upgradesFrameFunctions.autoRelicTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple")))
 
         local db = false
 
@@ -2257,12 +2298,15 @@ do
 
             if templeServiceFunctions.getTempleLevel(TempleId.RelicsTemple) == templeServiceFunctions.getTempleConfig(TempleId.RelicsTemple).MaxLevel then
                 db = false
-                functions.SetSetting("autoRelicTemple", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoRelicTemple", false)
+                until functions.GetSetting("autoRelicTemple") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(5)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(5)")
                 end
-                autoRelicTempleFunctions:updateText("Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple"))
-                autoRelicTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple")))
+                upgradesFrameFunctions.autoRelicTempleFunctions:updateText("Auto Relic Temple: "..functions.GetTextFromSetting("autoRelicTemple"))
+                upgradesFrameFunctions.autoRelicTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicTemple")))
                 popupServiceFunctions.show({Text = "Relic Temple is Maxed! Auto Relic Temple disabled.", Duration = 5})
                 return
             end
@@ -2287,8 +2331,8 @@ do
 
     function upgradeFunctions.autoBibleTemple()
         functions.SetSetting("autoBibleTemple", not functions.GetSetting("autoBibleTemple"))
-        autoBibleTempleFunctions:updateText("Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple"))
-        autoBibleTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple")))
+        upgradesFrameFunctions.autoBibleTempleFunctions:updateText("Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple"))
+        upgradesFrameFunctions.autoBibleTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple")))
 
         local db = false
 
@@ -2302,12 +2346,15 @@ do
 
             if templeServiceFunctions.getTempleLevel(TempleId.BibleTemple) == templeServiceFunctions.getTempleConfig(TempleId.BibleTemple).MaxLevel then
                 db = false
-                functions.SetSetting("autoBibleTemple", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoBibleTemple", false)
+                until functions.GetSetting("autoBibleTemple") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(6)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(6)")
                 end
-                autoBibleTempleFunctions:updateText("Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple"))
-                autoBibleTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple")))
+                upgradesFrameFunctions.autoBibleTempleFunctions:updateText("Auto Bible Temple: "..functions.GetTextFromSetting("autoBibleTemple"))
+                upgradesFrameFunctions.autoBibleTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleTemple")))
                 popupServiceFunctions.show({Text = "Bible Temple is Maxed! Auto Bible Temple disabled.", Duration = 5})
                 return
             end
@@ -2332,8 +2379,8 @@ do
 
     function upgradeFunctions.autoSoulDPBoard()
         functions.SetSetting("autoSoulDPBoard", not functions.GetSetting("autoSoulDPBoard"))
-        autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard"))
-        autoSoulDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard")))
+        upgradesFrameFunctions.autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard"))
+        upgradesFrameFunctions.autoSoulDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard")))
 
         local db = false
 
@@ -2343,12 +2390,15 @@ do
 
             if templeServiceFunctions.getDivinePowerBoardLevel(TempleId.SoulsTemple) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.SoulsDivineBoost).MaxLevel then
                 db = false
-                functions.SetSetting("autoSoulDPBoard", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoSoulDPBoard", false)
+                until functions.GetSetting("autoSoulDPBoard") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(7)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(7)")
                 end
-                autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard"))
-                autoSoulDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard")))
+                upgradesFrameFunctions.autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..functions.GetTextFromSetting("autoSoulDPBoard"))
+                upgradesFrameFunctions.autoSoulDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoSoulDPBoard")))
                 popupServiceFunctions.show({Text = "Soul DP Board is Maxed! Auto Soul DP Board disabled.", Duration = 5})
                 return
             end
@@ -2385,8 +2435,8 @@ do
 
     function upgradeFunctions.autoRelicDPBoard()
         functions.SetSetting("autoRelicDPBoard", not functions.GetSetting("autoRelicDPBoard"))
-        autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard"))
-        autoRelicDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard")))
+        upgradesFrameFunctions.autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard"))
+        upgradesFrameFunctions.autoRelicDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard")))
 
         local db = false
 
@@ -2396,12 +2446,15 @@ do
 
             if templeServiceFunctions.getDivinePowerBoardLevel(TempleId.RelicsTemple) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.RelicsDivineBoost).MaxLevel then
                 db = false
-                functions.SetSetting("autoRelicDPBoard", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoRelicDPBoard", false)
+                until functions.GetSetting("autoRelicDPBoard") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(8)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(8)")
                 end
-                autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard"))
-                autoRelicDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard")))
+                upgradesFrameFunctions.autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..functions.GetTextFromSetting("autoRelicDPBoard"))
+                upgradesFrameFunctions.autoRelicDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoRelicDPBoard")))
                 popupServiceFunctions.show({Text = "Relic DP Board is Maxed! Auto Relic DP Board disabled.", Duration = 5})
                 return
             end
@@ -2438,8 +2491,8 @@ do
 
     function upgradeFunctions.autoBibleDPBoard()
         functions.SetSetting("autoBibleDPBoard", not functions.GetSetting("autoBibleDPBoard"))
-        autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard"))
-        autoBibleDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard")))
+        upgradesFrameFunctions.autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard"))
+        upgradesFrameFunctions.autoBibleDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard")))
 
         local db = false
 
@@ -2449,12 +2502,15 @@ do
 
             if templeServiceFunctions.getDivinePowerBoardLevel(TempleId.BibleTemple) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.BibleDivineBoost).MaxLevel then
                 db = false
-                functions.SetSetting("autoBibleDPBoard", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoBibleTemple", false)
+                until functions.GetSetting("autoBibleTemple") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(9)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(9)")
                 end
-                autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard"))
-                autoBibleDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard")))
+                upgradesFrameFunctions.autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..functions.GetTextFromSetting("autoBibleDPBoard"))
+                upgradesFrameFunctions.autoBibleDPBoardFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoBibleDPBoard")))
                 popupServiceFunctions.show({Text = "Bible DP Board is Maxed! Auto Bible DP Board disabled.", Duration = 5})
                 return
             end
@@ -2491,8 +2547,8 @@ do
 
     function upgradeFunctions.autoDepositMainTemple()
         functions.SetSetting("autoDepositMainTemple", not functions.GetSetting("autoDepositMainTemple"))
-        autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple"))
-        autoDepositMainTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple")))
+        upgradesFrameFunctions.autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple"))
+        upgradesFrameFunctions.autoDepositMainTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple")))
 
         local db = false
 
@@ -2508,12 +2564,15 @@ do
 
             if templeServiceFunctions.getTempleLevel(TempleId.MainTemple) == templeServiceFunctions.getTempleConfig(TempleId.MainTemple).MaxLevel then
                 db = false
-                functions.SetSetting("autoDepositMainTemple", false)
+                repeat
+                    task.wait()
+                    functions.SetSetting("autoDepositMainTemple", false)
+                until functions.GetSetting("autoDepositMainTemple") == false
                 if functions.ConnectionExists("StatServiceClient.StatChanged(10)") == true then
                     functions.DestroyConnection("StatServiceClient.StatChanged(10)")
                 end
-                autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple"))
-                autoDepositMainTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple")))
+                upgradesFrameFunctions.autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..functions.GetTextFromSetting("autoDepositMainTemple"))
+                upgradesFrameFunctions.autoDepositMainTempleFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoDepositMainTemple")))
                 popupServiceFunctions.show({Text = "Main Temple is Maxed! Auto Deposit Main Temple disabled.", Duration = 5})
                 return
             end
@@ -2539,8 +2598,8 @@ do
 
     function upgradeFunctions.autoHellStairsNodes()
         functions.SetSetting("autoHellStairsNodes", not functions.GetSetting("autoHellStairsNodes"))
-        autoHellStairsNodesFunctions:updateText("Auto Hell Stairs Nodes: "..functions.GetTextFromSetting("autoHellStairsNodes"))
-        autoHellStairsNodesFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoHellStairsNodes")))
+        upgradesFrameFunctions.autoHellStairsNodesFunctions:updateText("Auto Hell Stairs Nodes: "..functions.GetTextFromSetting("autoHellStairsNodes"))
+        upgradesFrameFunctions.autoHellStairsNodesFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoHellStairsNodes")))
 
         local db = false
 
@@ -2577,8 +2636,8 @@ do
 
     function upgradeFunctions.autoStairwayNodes()
         functions.SetSetting("autoStairwayNodes", not functions.GetSetting("autoStairwayNodes"))
-        autoStairwayNodesFunctions:updateText("Auto Stairway Nodes: "..functions.GetTextFromSetting("autoStairwayNodes"))
-        autoStairwayNodesFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoStairwayNodes")))
+        upgradesFrameFunctions.autoStairwayNodesFunctions:updateText("Auto Stairway Nodes: "..functions.GetTextFromSetting("autoStairwayNodes"))
+        upgradesFrameFunctions.autoStairwayNodesFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoStairwayNodes")))
 
         local db = false
 
@@ -2615,8 +2674,8 @@ do
 
     function upgradeFunctions.autoUnderworld()
         functions.SetSetting("autoUnderworld", not functions.GetSetting("autoUnderworld"))
-        autoUnderworldFunctions:updateText("Auto Underworld: "..functions.GetTextFromSetting("autoUnderworld"))
-        autoUnderworldFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoUnderworld")))
+        upgradesFrameFunctions.autoUnderworldFunctions:updateText("Auto Underworld: "..functions.GetTextFromSetting("autoUnderworld"))
+        upgradesFrameFunctions.autoUnderworldFunctions:updateGradient(uiCreationFunctions.getGradient(functions.GetSetting("autoUnderworld")))
 
         local db = false
 
@@ -2674,43 +2733,39 @@ end
 popupServiceFunctions.show({Text = "Loading connections..."; Duration = 2;})
 
 do
-    functions.NewConnection("closeButton.MouseButton1Click", closeButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("closeButton.MouseButton1Click", closeButtons.closeButton.MouseButton1Click:Connect(function()
         getgenv().Destroy()
     end))
 
-    functions.NewConnection("closeButtonSettings.MouseButton1Click", closeButtonSettings.MouseButton1Click:Connect(function()
-        backSettingsFrame.Visible = false
+    functions.NewConnection("closeButtonSettings.MouseButton1Click", closeButtons.closeButtonSettings.MouseButton1Click:Connect(function()
+        Frames.settingsFrame.Visible = false
     end))
 
-    functions.NewConnection("closeButtonUpgrades.MouseButton1Click", closeButtonUpgrades.MouseButton1Click:Connect(function()
-        backUpgradesFrame.Visible = false
+    functions.NewConnection("closeButtonUpgrades.MouseButton1Click", closeButtons.closeButtonUpgrades.MouseButton1Click:Connect(function()
+        Frames.upgradesFrame.Visible = false
     end))
 end
 
 -------------------->> Main Buttons <<--------------------
 
 do
-    functions.NewConnection("farmSpirits.MouseButton1Click", farmSpiritsButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("farmSpirits.MouseButton1Click", mainFrameButtons.farmSpiritsButton.MouseButton1Click:Connect(function()
         mainFunctions.autoFarmSpirits()
     end))
 
-    functions.NewConnection("spawnEliteSpirit.MouseButton1Click", spawnEliteSpiritButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("spawnEliteSpirit.MouseButton1Click", mainFrameButtons.spawnEliteSpiritButton.MouseButton1Click:Connect(function()
         mainFunctions.autoSpawnEliteSpirit()
     end))
 
-    functions.NewConnection("farmBossSpirit.MouseButton1Click", farmBossSpiritButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("farmBossSpirit.MouseButton1Click", mainFrameButtons.farmBossSpiritButton.MouseButton1Click:Connect(function()
         mainFunctions.autoFarmBossSpirit()
     end))
 
-    functions.NewConnection("farmSurgeButton.MouseButton1Click", farmSurgeButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("farmSurgeButton.MouseButton1Click", mainFrameButtons.farmSurgeButton.MouseButton1Click:Connect(function()
         mainFunctions.autoFarmSurge()
     end))
 
-    functions.NewConnection("autoReincarnateButton.MouseButton1Click", autoReincarnateButton.MouseButton1Click:Connect(function()
-        mainFunctions.autoReincarnate()
-    end))
-
-    functions.NewConnection("autoClickRelicButton.MouseButton1Click", autoClickRelicButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoClickRelicButton.MouseButton1Click", mainFrameButtons.autoClickRelicButton.MouseButton1Click:Connect(function()
         mainFunctions.autoClickRelic()
     end))
 end
@@ -2718,33 +2773,33 @@ end
 -------------------->> Settings Buttons <<--------------------
 
 do
-    functions.NewConnection("rebirthIfUnAffButton.MouseButton1Click", rebirthIfUnAffButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("rebirthIfUnAffButton.MouseButton1Click", settingsFrameButtons.rebirthIfUnAffButton.MouseButton1Click:Connect(function()
         settingsFunctions.autoRebirthIfUnAff()
     end))
 
-    functions.NewConnection("autoBuyTrialShopButton.MouseButton1Click", autoBuyTrialShopButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoBuyTrialShopButton.MouseButton1Click", settingsFrameButtons.autoBuyTrialShopButton.MouseButton1Click:Connect(function()
         settingsFunctions.autoBuyTrialShop()
     end))
 
-    functions.NewConnection("autoRadianceBoostButton.MouseButton1Click", autoRadianceBoostButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoRadianceBoostButton.MouseButton1Click", settingsFrameButtons.autoRadianceBoostButton.MouseButton1Click:Connect(function()
         settingsFunctions.autoRadianceBoostWhenMax()
     end))
 
-    functions.NewConnection("autoAscendButton.MouseButton1Click", autoAscendButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoAscendButton.MouseButton1Click", settingsFrameButtons.autoAscendButton.MouseButton1Click:Connect(function()
         settingsFunctions.autoAscend()
     end))
 
-    functions.NewConnection("ascendButton.MouseButton1Click", ascendButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("ascendButton.MouseButton1Click", settingsFrameButtons.ascendButton.MouseButton1Click:Connect(function()
         ascensionServiceFunctions.RequestAscension()
         popupServiceFunctions.show({Text = "Requesting Ascension...", Duration = 3})
     end))
 
-    functions.NewConnection("copyScriptButton.MouseButton1Click", copyScriptButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("copyScriptButton.MouseButton1Click", settingsFrameButtons.copyScriptButton.MouseButton1Click:Connect(function()
         setclipboard(scriptHttp)
         popupServiceFunctions.show({Text = "Script Copied to Clipboard!", Duration = 3})
     end))
 
-    functions.NewConnection("queueOnTeleportButton.MouseButton1Click", queueOnTeleportButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("queueOnTeleportButton.MouseButton1Click", settingsFrameButtons.queueOnTeleportButton.MouseButton1Click:Connect(function()
         queue_on_teleport(scriptHttp)
         popupServiceFunctions.show({Text = "Script Queued on Teleport! Can't be disabled until teleportation is complete.", Duration = 3})
     end))
@@ -2753,59 +2808,59 @@ end
 -------------------->> Upgrades Buttons <<--------------------
 
 do
-    functions.NewConnection("autoZone1Button.MouseButton1Click", autoZone1Button.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoZone1Button.MouseButton1Click", upgradesFrameButtons.autoZone1Button.MouseButton1Click:Connect(function()
         upgradeFunctions.autoZone1()
     end))
 
-    functions.NewConnection("autoZone2Button.MouseButton1Click", autoZone2Button.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoZone2Button.MouseButton1Click", upgradesFrameButtons.autoZone2Button.MouseButton1Click:Connect(function()
         upgradeFunctions.autoZone2()
     end))
 
-    functions.NewConnection("autoZone3NoEliteSoulsButton.MouseButton1Click", autoZone3NoEliteSoulsButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoZone3NoEliteSoulsButton.MouseButton1Click", upgradesFrameButtons.autoZone3NoEliteSoulsButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoZone3NoEliteSouls()
     end))
 
-    functions.NewConnection("autoZone3EliteSoulsButton.MouseButton1Click", autoZone3EliteSoulsButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoZone3EliteSoulsButton.MouseButton1Click", upgradesFrameButtons.autoZone3EliteSoulsButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoZone3EliteSouls()
     end))
 
-    functions.NewConnection("autoSoulTempleButton.MouseButton1Click", autoSoulTempleButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoSoulTempleButton.MouseButton1Click", upgradesFrameButtons.autoSoulTempleButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoSoulTemple()
     end))
 
-    functions.NewConnection("autoRelicTempleButton.MouseButton1Click", autoRelicTempleButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoRelicTempleButton.MouseButton1Click", upgradesFrameButtons.autoRelicTempleButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoRelicTemple()
     end))
 
-    functions.NewConnection("autoBibleTempleButton.MouseButton1Click", autoBibleTempleButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoBibleTempleButton.MouseButton1Click", upgradesFrameButtons.autoBibleTempleButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoBibleTemple()
     end))
 
-    functions.NewConnection("autoSoulDPBoardButton.MouseButton1Click", autoSoulDPBoardButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoSoulDPBoardButton.MouseButton1Click", upgradesFrameButtons.autoSoulDPBoardButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoSoulDPBoard()
     end))
 
-    functions.NewConnection("autoRelicDPBoardButton.MouseButton1Click", autoRelicDPBoardButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoRelicDPBoardButton.MouseButton1Click", upgradesFrameButtons.autoRelicDPBoardButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoRelicDPBoard()
     end))
 
-    functions.NewConnection("autoBibleDPBoardButton.MouseButton1Click", autoBibleDPBoardButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoBibleDPBoardButton.MouseButton1Click", upgradesFrameButtons.autoBibleDPBoardButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoBibleDPBoard()
     end))
 
-    functions.NewConnection("autoDepositMainTempleButton.MouseButton1Click", autoDepositMainTempleButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoDepositMainTempleButton.MouseButton1Click", upgradesFrameButtons.autoDepositMainTempleButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoDepositMainTemple()
     end))
 
-    functions.NewConnection("autoHellStairsNodesButton.MouseButton1Click", autoHellStairsNodesButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoHellStairsNodesButton.MouseButton1Click", upgradesFrameButtons.autoHellStairsNodesButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoHellStairsNodes()
     end))
 
-    functions.NewConnection("autoStairwayNodesButton.MouseButton1Click", autoStairwayNodesButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoStairwayNodesButton.MouseButton1Click", upgradesFrameButtons.autoStairwayNodesButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoStairwayNodes()
     end))
 
-    functions.NewConnection("autoUnderworldButton.MouseButton1Click", autoUnderworldButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("autoUnderworldButton.MouseButton1Click", upgradesFrameButtons.autoUnderworldButton.MouseButton1Click:Connect(function()
         upgradeFunctions.autoUnderworld()
     end))
 end
@@ -2813,18 +2868,18 @@ end
 -------------------->> Side Buttons <<--------------------
 
 do
-    functions.NewConnection("rebirthButton.MouseButton1Click", rebirthButton.MouseButton1Click:Connect(function()
+    functions.NewConnection("rebirthButton.MouseButton1Click", sideButtons.rebirthButton.MouseButton1Click:Connect(function()
         functions.rebirth()
     end))
 
-    functions.NewConnection("settingsButton.MouseButton1Click", settingsButton.MouseButton1Click:Connect(function()
-        backUpgradesFrame.Visible = false
-        backSettingsFrame.Visible = not backSettingsFrame.Visible
+    functions.NewConnection("settingsButton.MouseButton1Click", sideButtons.settingsButton.MouseButton1Click:Connect(function()
+        Frames.upgradesFrame.Visible = false
+        Frames.settingsFrame.Visible = not Frames.settingsFrame.Visible
     end))
 
-    functions.NewConnection("upgradesButton.MouseButton1Click", upgradesButton.MouseButton1Click:Connect(function()
-        backSettingsFrame.Visible = false
-        backUpgradesFrame.Visible = not backUpgradesFrame.Visible
+    functions.NewConnection("upgradesButton.MouseButton1Click", sideButtons.upgradesButton.MouseButton1Click:Connect(function()
+        Frames.settingsFrame.Visible = false
+        Frames.upgradesFrame.Visible = not Frames.upgradesFrame.Visible
     end))
 end
 
