@@ -1,5 +1,5 @@
 -------------------->> Execution Check <<--------------------
-local link = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v2.5.1.lua", true))()'
+local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v2.5.3.lua", true))()'
 
 if game.PlaceId ~= 94264573845314 then
     warn("Please execute this script in the correct game, 'Faith Incremental'! | PlaceId: 94264573845314")
@@ -2674,12 +2674,12 @@ do
     end))
 
     NewConnection("copyScriptButton.MouseButton1Click", copyScriptButton.MouseButton1Click:Connect(function()
-        setclipboard(link)
+        setclipboard(scriptHttp)
         show({Text = "Script Copied to Clipboard!", Duration = 3})
     end))
 
     NewConnection("queueOnTeleportButton.MouseButton1Click", queueOnTeleportButton.MouseButton1Click:Connect(function()
-        queue_on_teleport(link)
+        queue_on_teleport(scriptHttp)
         show({Text = "Script Queued on Teleport! Can't be disabled until teleportation is complete.", Duration = 3})
     end))
 end
