@@ -1,5 +1,5 @@
 -------------------->> Execution Check <<--------------------
-local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v2.5.3.lua", true))()'
+local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v2.5.4.lua", true))()'
 
 if game.PlaceId ~= 94264573845314 then
     warn("Please execute this script in the correct game, 'Faith Incremental'! | PlaceId: 94264573845314")
@@ -87,17 +87,20 @@ local Tower        = Underworld_1.Tower
 local Radiances    = Tower.Radiances
 
 local gameServices               = ReplicatedStorage.Services
-local EmberServiceClient         = require(gameServices.EmberService.EmberServiceClient)
-local ReincarnationServiceClient = require(gameServices.ReincarnationService.ReincarnationServiceClient)
-local RelicServiceClient         = require(gameServices.RelicService.RelicServiceClient)
-local AscensionServiceClient     = require(gameServices.AscensionService.AscensionServiceClient)
-local PopupServiceClient         = require(gameServices.PopupService.PopupServiceClient)
-local StatServiceClient          = require(gameServices.StatService.StatServiceClient)
-local TrialShopServiceClient     = require(gameServices.TrialShopService.TrialShopServiceClient)
-local TempleServiceClient        = require(gameServices.TempleService.TempleServiceClient)
-local TempleBoardServiceClient   = require(gameServices.TempleBoardService.TempleBoardServiceClient)
-local UpgradeBoardServiceClient  = require(gameServices.UpgradeBoardService.UpgradeBoardServiceClient)
-local UpgradeTreeServiceClient   = require(gameServices.UpgradeTreeService.UpgradeTreeServiceClient)
+local serviceTable = {
+    EmberServiceClient         = require(gameServices.EmberService.EmberServiceClient);
+    ReincarnationServiceClient = require(gameServices.ReincarnationService.ReincarnationServiceClient);
+    RelicServiceClient         = require(gameServices.RelicService.RelicServiceClient);
+    AscensionServiceClient     = require(gameServices.AscensionService.AscensionServiceClient);
+    PopupServiceClient         = require(gameServices.PopupService.PopupServiceClient);
+    StatServiceClient          = require(gameServices.StatService.StatServiceClient);
+    TrialShopServiceClient     = require(gameServices.TrialShopService.TrialShopServiceClient);
+    TempleServiceClient        = require(gameServices.TempleService.TempleServiceClient);
+    TempleBoardServiceClient   = require(gameServices.TempleBoardService.TempleBoardServiceClient);
+    UpgradeBoardServiceClient  = require(gameServices.UpgradeBoardService.UpgradeBoardServiceClient);
+    UpgradeTreeServiceClient   = require(gameServices.UpgradeTreeService.UpgradeTreeServiceClient);
+}
+local StatServiceClient = serviceTable.StatServiceClient
 
 local modules   = ReplicatedStorage.modules
 local constants = modules.constants
@@ -381,64 +384,79 @@ end
 
 -------------------->> EmberServiceClient <<--------------------
 
-local function isSurgeActive()
+local EmberServiceClient = serviceTable.EmberServiceClient
+local emberServiceFunctions = {}
+
+function emberServiceFunctions.isSurgeActive()
     return EmberServiceClient.IsSurgeActive()
 end
 
-local function getSurgePosition()
+function emberServiceFunctions.getSurgePosition()
     return EmberServiceClient.GetSurgePosition()
 end
 
-local function IsPlayerInSurge()
+function emberServiceFunctions.IsPlayerInSurge()
     return EmberServiceClient.IsPlayerInSurge()
 end
 
-local function getSurgeTimeRemaining()
+function emberServiceFunctions.getSurgeTimeRemaining()
     return EmberServiceClient.GetSurgeTimeRemaining()
 end
 
-local function RequestActivateRadiance()
+function emberServiceFunctions.RequestActivateRadiance()
     EmberServiceClient.RequestActivateRadiance()
 end
 
-local function GetRadianceCharges()
+function emberServiceFunctions.GetRadianceCharges()
     return EmberServiceClient.GetRadianceCharges()
 end
 
-local function GetRadianceMaxCharges()
+function emberServiceFunctions.GetRadianceMaxCharges()
     return EmberServiceClient.GetRadianceMaxCharges()
 end
 
 -------------------->> ReincarnationServiceClient <<--------------------
 
-local function reincarnationIsMaxed()
+local ReincarnationServiceClient = serviceTable.ReincarnationServiceClient
+local reincarnationServiceFunctions = {}
+
+function reincarnationServiceFunctions.reincarnationIsMaxed()
     return ReincarnationServiceClient.IsMaxed()
 end
 
-local function RequestReincarnation()
+function reincarnationServiceFunctions.RequestReincarnation()
     ReincarnationServiceClient.RequestReincarnation()
 end
 
 -------------------->> AscensionServiceClient <<--------------------
 
-local function RequestAscension()
+local AscensionServiceClient = serviceTable.AscensionServiceClient
+local ascensionServiceFunctions = {}
+
+function ascensionServiceFunctions.RequestAscension()
     AscensionServiceClient.RequestAscension()
 end
 
-local function getAPPreview()
+function ascensionServiceFunctions.GetAPPreview()
     return AscensionServiceClient.GetAPPreview()
 end
 
 -------------------->> RelicServiceClient <<--------------------
 
-local function relicClick()
+local RelicServiceClient = serviceTable.RelicServiceClient
+local relicServiceFunctions = {}
+
+function relicServiceFunctions.relicClick()
     RelicServiceClient.Click()
     --Packets.RelicClick:Fire({})
 end
 
 -------------------->> PopupServiceClient <<--------------------
 
-local function show(options)
+local PopupServiceClient = serviceTable.PopupServiceClient
+local popupServiceFunctions = {}
+
+function popupServiceFunctions.show(options)
     options = Validate({
         Text = "This is a test popup!";
         Duration = 5;
@@ -451,15 +469,18 @@ end
 
 -------------------->> TrialShopServiceClient <<--------------------
 
-local function getAllStock()
+local TrialShopServiceClient = serviceTable.TrialShopServiceClient
+local trialShopServiceFunctions = {}
+
+function trialShopServiceFunctions.getAllStock()
     return TrialShopServiceClient.GetAllStock()
 end
 
-local function isMaxLevel(id)
+function trialShopServiceFunctions.isMaxLevel(id)
     return TrialShopServiceClient.IsMaxLevel(id)
 end
 
-local function trialShopRequestPurchase(id)
+function trialShopServiceFunctions.RequestPurchase(id)
     TrialShopServiceClient.RequestPurchase(id)
     --[[
     Packets.RequestTrialShopPurchase:Fire({
@@ -468,13 +489,13 @@ local function trialShopRequestPurchase(id)
     ]]
 end
 
-local function buyOutTrialShop()
-    local stock = getAllStock()
+function trialShopServiceFunctions.buyOutTrialShop()
+    local stock = trialShopServiceFunctions.getAllStock()
 
     for id, amount in pairs(stock) do
-        if isMaxLevel(id) == false then
+        if trialShopServiceFunctions.isMaxLevel(id) == false then
             for i = 1, amount do
-                trialShopRequestPurchase(id)
+                trialShopServiceFunctions.RequestPurchase(id)
             end
         end
     end
@@ -482,31 +503,34 @@ end
 
 -------------------->> TempleServiceClient <<--------------------
 
-local function getTempleLevel(id)
+local TempleServiceClient = serviceTable.TempleServiceClient
+local templeServiceFunctions = {}
+
+function templeServiceFunctions.getTempleLevel(id)
     return TempleServiceClient.GetTempleLevel(id)
 end
 
-local function getDivinePowerBoardLevel(id)
+function templeServiceFunctions.getDivinePowerBoardLevel(id)
     return TempleServiceClient.GetDivinePowerBoardLevel(id)
 end
 
-local function isTempleBuilt(id)
+function templeServiceFunctions.isTempleBuilt(id)
     return TempleServiceClient.IsTempleBuilt(id)
 end
 
-local function getTempleConfig(id)
+function templeServiceFunctions.getTempleConfig(id)
     return TempleServiceClient.GetTempleConfig(id)
 end
 
-local function getDivinePowerBoardConfig(id)
-    return TempleBoardServiceClient.GetDivinePowerBoardConfig(id)
+function templeServiceFunctions.getDivinePowerBoardConfig(id)
+    return TempleServiceClient.GetDivinePowerBoardConfig(id)
 end
 
-local function areAllCurrencyTemplesCompleted()
-    return TempleBoardServiceClient.AreAllCurrencyTemplesCompleted()
+function templeServiceFunctions.areAllCurrencyTemplesCompleted()
+    return TempleServiceClient.AreAllCurrencyTemplesCompleted()
 end
 
-local function RequestBuildTemple(id)
+function templeServiceFunctions.requestBuildTemple(id)
     TempleServiceClient.RequestBuildTemple(id)
     --[[
     Packets.RequestBuildTemple:Fire({
@@ -515,7 +539,7 @@ local function RequestBuildTemple(id)
     ]]
 end
 
-local function RequestUpgradeTemple(id, amount)
+function templeServiceFunctions.requestUpgradeTemple(id, amount)
     TempleServiceClient.RequestUpgradeTemple(id, amount)
     --[[
     Packets.RequestUpgradeTemple:Fire({
@@ -525,7 +549,7 @@ local function RequestUpgradeTemple(id, amount)
     ]]
 end
 
-local function RequestUpgradeDPBoard(id, amount)
+function templeServiceFunctions.requestUpgradeDPBoard(id, amount)
     TempleServiceClient.RequestUpgradeDPBoard(id, amount)
     --[[
     Packets.RequestUpgradeDivinePowerBoard:Fire({
@@ -535,7 +559,7 @@ local function RequestUpgradeDPBoard(id, amount)
     ]]
 end
 
-local function RequestDeposit(currency, percentage)
+function templeServiceFunctions.requestDeposit(currency, percentage)
     TempleServiceClient.RequestDeposit(currency, percentage)
     --[[
     Packets.RequestDepositToMainTemple:Fire({
@@ -545,7 +569,7 @@ local function RequestDeposit(currency, percentage)
     ]]
 end
 
-local function purchaseMaxTemple(mod: Model)
+function templeServiceFunctions.purchaseMaxTemple(mod: Model)
     local templeId = getTempleId(mod)
 
     if templeId ~= nil then
@@ -569,7 +593,7 @@ local function purchaseMaxTemple(mod: Model)
     end
 end
 
-local function purchaseMaxDPBoard(part: Part)
+function templeServiceFunctions.purchaseMaxDPBoard(part: Part)
     local boardId = getBoardId(part)
 
     if boardId ~= nil then
@@ -593,7 +617,7 @@ local function purchaseMaxDPBoard(part: Part)
     end
 end
 
-local function depositAll()
+function templeServiceFunctions.depositAll()
     local currencies = {
         "Faith",
         "Rebirths",
@@ -611,7 +635,10 @@ end
 
 -------------------->> UpgradeBoardServiceClient <<--------------------
 
-local function boardRequestPurchase(zone, id, amount)
+local UpgradeBoardServiceClient = serviceTable.UpgradeBoardServiceClient
+local upgradeBoardServiceFunctions = {}
+
+function upgradeBoardServiceFunctions.boardRequestPurchase(zone, id, amount)
     UpgradeBoardServiceClient.RequestPurchase(zone, id, amount)
     --[[
     Packets.PurchaseUpgrade:Fire({
@@ -623,11 +650,11 @@ local function boardRequestPurchase(zone, id, amount)
     ]]
 end
 
-local function isBoardTypeValid(boardType)
+function upgradeBoardServiceFunctions.isBoardTypeValid(boardType)
     return boardType ~= "Rebirth" and boardType ~= "Reincarnation" and boardType ~= "Clicker"
 end
 
-local function purchaseBoards(t: {Part})
+function upgradeBoardServiceFunctions.purchaseBoards(t: {Part})
     if typeof(t) ~= "table" then return end
 
     for _, v in pairs(t) do
@@ -682,7 +709,10 @@ end
 
 -------------------->> UpgradeTreeServiceClient <<--------------------
 
-local function treeRequestPurchase(zone, tree, node)
+local UpgradeTreeServiceClient = serviceTable.UpgradeTreeServiceClient
+local upgradeTreeServiceFunctions = {}
+
+function upgradeTreeServiceFunctions.treeRequestPurchase(zone, tree, node)
     UpgradeTreeServiceClient.RequestPurchase(zone, tree, node)
     --[[
     Packets.PurchaseTreeNode:Fire({
@@ -693,31 +723,31 @@ local function treeRequestPurchase(zone, tree, node)
     ]]
 end
 
-local function isNodeVisible(zone, tree, node)
+function upgradeTreeServiceFunctions.isNodeVisible(zone, tree, node)
     return UpgradeTreeServiceClient.IsNodeVisible(zone, tree, node)
 end
 
-local function isNodePurchased(zone, tree, node)
+function upgradeTreeServiceFunctions.isNodePurchased(zone, tree, node)
     return UpgradeTreeServiceClient.IsNodePurchased(zone, tree, node)
 end
 
-local function isNodeHidden(zone, tree, node)
+function upgradeTreeServiceFunctions.isNodeHidden(zone, tree, node)
     return UpgradeTreeServiceClient.IsNodeHidden(zone, tree, node)
 end
 
-local function purchaseUnderworldNode(node)
-    treeRequestPurchase(ZoneId.Underworld, "CorruptionTree", node)
+function upgradeTreeServiceFunctions.purchaseUnderworldNode(node)
+    upgradeTreeServiceFunctions.treeRequestPurchase(ZoneId.Underworld, "CorruptionTree", node)
 end
 
-local function canPurchaseNode(zoneId, treeId, nodeId)
-    if isNodePurchased(zoneId, treeId, nodeId) == true or isNodeHidden(zoneId, treeId, nodeId) == true or isNodeVisible(zoneId, treeId, nodeId) == false then
+function upgradeTreeServiceFunctions.canPurchaseNode(zoneId, treeId, nodeId)
+    if upgradeTreeServiceFunctions.isNodePurchased(zoneId, treeId, nodeId) == true or upgradeTreeServiceFunctions.isNodeHidden(zoneId, treeId, nodeId) == true or upgradeTreeServiceFunctions.isNodeVisible(zoneId, treeId, nodeId) == false then
         return false
     end
 
     return true
 end
 
-local function isNodeColorCurrency(object: BasePart, currency: string)
+function upgradeTreeServiceFunctions.isNodeColorCurrency(object: BasePart, currency: string)
     if getNodeColor(currency) == object.Color then
         return true
     end
@@ -731,7 +761,7 @@ local function isNodeColorCurrency(object: BasePart, currency: string)
     return false
 end
 
-local function checkNodeAvailable(object: Model, underworld: boolean?)
+function upgradeTreeServiceFunctions.checkNodeAvailable(object: Model, underworld: boolean?)
     local zoneId = getZoneId(object)
     local treeId = getTreeId(object)
     local nodeId = getNodeId(object)
@@ -745,14 +775,14 @@ local function checkNodeAvailable(object: Model, underworld: boolean?)
         return false
     end
 
-    if canPurchaseNode(zoneId, treeId, nodeId) == true then
+    if upgradeTreeServiceFunctions.canPurchaseNode(zoneId, treeId, nodeId) == true then
         return true
     end
 
     return false
 end
 
-local function purchaseNodes(t: {Model}, underworld: boolean?)
+function upgradeTreeServiceFunctions.purchaseNodes(t: {Model}, underworld: boolean?)
     if typeof(t) ~= "table" then return end
 
     for _, v in ipairs(t) do
@@ -761,9 +791,9 @@ local function purchaseNodes(t: {Model}, underworld: boolean?)
         local nodeId = getNodeId(v)
 
         if underworld == true then
-            purchaseUnderworldNode(nodeId)
+            upgradeTreeServiceFunctions.purchaseUnderworldNode(nodeId)
         else
-            treeRequestPurchase(zoneId, treeId, nodeId)
+            upgradeTreeServiceFunctions.treeRequestPurchase(zoneId, treeId, nodeId)
         end
     end
 end
@@ -774,7 +804,7 @@ local function rebirth()
     -- if typeof(firesignal) == "function" then
     --     firesignal(RebirthButton.Activated)
     -- end
-    boardRequestPurchase(ZoneId.Zone1_Church, "Rebirth", 1)
+    upgradeBoardServiceFunctions.boardRequestPurchase(ZoneId.Zone1_Church, "Rebirth", 1)
 end
 
 local function spawnElite()
@@ -925,7 +955,7 @@ local function getGradient(Setting)
 end
 
 -------------------->> construction <<--------------------
-show({Text = "Loading, please wait..."; Duration = 2;})
+popupServiceFunctions.show({Text = "Loading, please wait..."; Duration = 2;})
 
 local function constructGradient(options)
     options = Validate({
@@ -1563,7 +1593,7 @@ local protectGui = false
 
 if protectGui == true then
     do
-        show({Text = "Protecting GUI..."; Duration = 3;})
+        popupServiceFunctions.show({Text = "Protecting GUI..."; Duration = 3;})
         print("\n\n\n-------------------->> ProtectGui <<--------------------\n")
         local startTime = DateTime.now().UnixTimestamp
 
@@ -1580,7 +1610,7 @@ if protectGui == true then
 end
 
 -------------------->> Main <<--------------------
-show({Text = "Loading functions..."; Duration = 2;})
+popupServiceFunctions.show({Text = "Loading functions..."; Duration = 2;})
 
 local function AutoFarmSpirits()
     SetSetting("FarmSpirits", not GetSetting("FarmSpirits"))
@@ -1669,29 +1699,15 @@ local function AutoFarmBossSpirit()
                     GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
                 end)
             until getBoss() == nil or GetSetting("FarmBossSpirit") ~= true
+            
             SetSetting("spiritsPaused", false)
             SetSetting("surgePaused", false)
             pcall(function() GetHumanoidRootPart().CFrame = lastCFrame end)
-            --pcall(function() DestroyConnection("Humanoid.Changed")  end)
         end
     end
 
     if GetSetting("FarmBossSpirit") == true then
         fightBoss()
-
-        -- pcall(function()
-        --     NewConnection("Humanoid.Changed", GetHumanoid().Changed:Connect(function()
-        --         if getBoss() ~= nil and getBossPlatForm() ~= nil then
-        --             --GetHumanoid().Sit = false
-        --             pcall(function()
-        --                 repeat
-        --                 task.wait()
-        --                 GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
-        --                 until GetHumanoid().Sit == false and GetHumanoid().SeatPart == nil
-        --             end)
-        --         end
-        --     end))
-        -- end)
 
         NewConnection("workspace.ChildAdded", Work.ChildAdded:Connect(function()
             fightBoss()
@@ -1708,16 +1724,16 @@ local function AutoFarmSurge()
     farmSurgeFunctions:updateGradient(getGradient(GetSetting("FarmSurge")))
 
     local function farmSurge()
-        if (isSurgeActive() == true and getSurgePosition() ~= nil) and GetSetting("FarmSurge") == true then
+        if (emberServiceFunctions.isSurgeActive() == true and emberServiceFunctions.getSurgePosition() ~= nil) and GetSetting("FarmSurge") == true then
             pcall(function()
                 if GetSetting("surgePaused") ~= true and GetHumanoidRootPart() ~= nil then
                     local lastCFrame = GetLastCFrame()
                     repeat
                         task.wait()
                         SetSetting("spiritsPaused", true)
-                        GetHumanoidRootPart().CFrame = CFrame.new(getSurgePosition() + Vector3.new(0, 2.75, 0))
+                        GetHumanoidRootPart().CFrame = CFrame.new(emberServiceFunctions.getSurgePosition() + Vector3.new(0, 2.75, 0))
                         GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
-                    until isSurgeActive() == false or getSurgePosition() == nil or GetSetting("FarmSurge") ~= true or GetSetting("surgePaused") == true
+                    until emberServiceFunctions.isSurgeActive() == false or emberServiceFunctions.getSurgePosition() == nil or GetSetting("FarmSurge") ~= true or GetSetting("surgePaused") == true
                     GetHumanoidRootPart().CFrame = lastCFrame
                 end
             end)
@@ -1748,8 +1764,8 @@ local function AutoReincarnate()
     autoReincarnateFunctions:updateGradient(getGradient(GetSetting("autoReincarnate")))
 
     local function reincarnate()
-        if reincarnationIsMaxed() ~= true then
-            RequestReincarnation()
+        if reincarnationServiceFunctions.reincarnationIsMaxed() ~= true then
+            reincarnationServiceFunctions.RequestReincarnation()
         end
     end
 
@@ -1769,11 +1785,11 @@ local function AutoClickRelic()
     autoClickRelicFunctions:updateGradient(getGradient(GetSetting("autoClickRelic")))
 
     if GetSetting("autoClickRelic") == true then
-        relicClick()
+        relicServiceFunctions.relicClick()
 
         while task.wait() do
             if GetSetting("autoClickRelic") ~= true then break end
-            relicClick()
+            relicServiceFunctions.relicClick()
         end
     end
 end
@@ -1792,11 +1808,11 @@ local function AutoBuyTrialShop()
     autoBuyTrialShopFunctions:updateGradient(getGradient(GetSetting("autoBuyTrialShop")))
 
     if GetSetting("autoBuyTrialShop") == true then
-        buyOutTrialShop()
+        trialShopServiceFunctions.buyOutTrialShop()
 
         while task.wait(10) do
              if GetSetting("autoBuyTrialShop") ~= true then break end
-             buyOutTrialShop()
+             trialShopServiceFunctions.buyOutTrialShop()
         end
     end
 end
@@ -1809,23 +1825,23 @@ local function AutoRadianceBoostWhenMax()
     local waitingTrue = false
 
     local function boost()
-        if GetRadianceCharges() == GetRadianceMaxCharges() then
+        if EmberServiceClient.GetRadianceCharges() == EmberServiceClient.GetRadianceMaxCharges() then
            if GetSetting("FarmSurge") == true then
                 repeat
                     task.wait()
                     waitingTrue = true
                 until 
-                    (IsPlayerInSurge() == true and getSurgeTimeRemaining()>6.5) or
+                    (EmberServiceClient.IsPlayerInSurge() == true and EmberServiceClient.GetSurgeTimeRemaining()>6.5) or
                     GetSetting("FarmSurge") ~= true or
                     GetSetting("autoRadianceBoostWhenMax") ~= true or
-                    GetRadianceCharges() ~= GetRadianceMaxCharges()
+                    EmberServiceClient.GetRadianceCharges() ~= EmberServiceClient.GetRadianceMaxCharges()
                 
                 waitingTrue = false
-                if GetSetting("autoRadianceBoostWhenMax") == true and GetRadianceCharges() == GetRadianceMaxCharges() then
-                    RequestActivateRadiance()
+                if GetSetting("autoRadianceBoostWhenMax") == true and EmberServiceClient.GetRadianceCharges() == EmberServiceClient.GetRadianceMaxCharges() then
+                    EmberServiceClient.RequestActivateRadiance()
                 end
            else
-                RequestActivateRadiance()
+                EmberServiceClient.RequestActivateRadiance()
            end
         end
     end
@@ -1854,8 +1870,8 @@ local function AutoAscend()
         if db == true then return end
         db = true
 
-        if getAPPreview() >= 12 then
-            RequestAscension()
+        if AscensionServiceClient.getAPPreview() >= 12 then
+            AscensionServiceClient.RequestAscension()
         end
 
         task.wait(0.5)
@@ -1898,7 +1914,7 @@ local function autoZone1()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if isBoardTypeValid(board.BoardType) == true then
+                        if upgradeBoardServiceFunctions.isBoardTypeValid(board.BoardType) == true then
                             table.insert(boardt, v)
                         end
                     end
@@ -1909,7 +1925,7 @@ local function autoZone1()
         local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                    if upgradeTreeServiceFunctions.isNodeColorCurrency(v.Node, currency) == true and upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                         table.insert(treeT, v)
                     end
                 end 
@@ -1923,8 +1939,8 @@ local function autoZone1()
 
         DebugPrint("Zone 1 Nodes: "..tostring(#treeT))
         DebugPrint("Zone 1 Boards: "..tostring(#boardt))
-        purchaseNodes(treeT)
-        purchaseBoards(boardt)
+        upgradeTreeServiceFunctions.purchaseNodes(treeT)
+        upgradeBoardServiceFunctions.purchaseBoards(boardt)
         task.wait(0.5)
         db = false
     end
@@ -1963,7 +1979,7 @@ local function autoZone2()
                     local board = zone and zone.Boards[boardId]
 
                     if zone ~= nil and board ~= nil then
-                        if isBoardTypeValid(board.BoardType) == true then
+                        if upgradeBoardServiceFunctions.isBoardTypeValid(board.BoardType) == true then
                             table.insert(boardt, v)
                         end
                     end
@@ -1974,7 +1990,7 @@ local function autoZone2()
         local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                    if upgradeTreeServiceFunctions.isNodeColorCurrency(v.Node, currency) == true and upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                         table.insert(treeT, v)
                     end
                 end 
@@ -1990,8 +2006,8 @@ local function autoZone2()
 
         DebugPrint("Zone 2 Nodes: "..tostring(#treeT))
         DebugPrint("Zone 2 Boards: "..tostring(#boardt))
-        purchaseNodes(treeT)
-        purchaseBoards(boardt)
+        upgradeTreeServiceFunctions.purchaseNodes(treeT)
+        upgradeBoardServiceFunctions.purchaseBoards(boardt)
         task.wait(0.5)
         db = false
     end
@@ -2031,7 +2047,7 @@ local function autoZone3NoEliteSouls()
 
                     if zone ~= nil and board ~= nil then
                         if board.Currency == GameEnum.Currency.EliteSouls then continue end
-                        if isBoardTypeValid(board.BoardType) == true then
+                        if upgradeBoardServiceFunctions.isBoardTypeValid(board.BoardType) == true then
                             table.insert(boardt, v)
                         end
                     end
@@ -2042,7 +2058,7 @@ local function autoZone3NoEliteSouls()
         local function addToTreeT(z, currency)
             for _, v in pairs(z:GetChildren()) do
                 if v:IsA("Model") and v:FindFirstChild("Node") then
-                    if isNodeColorCurrency(v.Node, currency) == true and checkNodeAvailable(v) == true then
+                    if upgradeTreeServiceFunctions.isNodeColorCurrency(v.Node, currency) == true and upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                         table.insert(treeT, v)
                     end
                 end 
@@ -2056,8 +2072,8 @@ local function autoZone3NoEliteSouls()
 
         DebugPrint("Zone 3 Nodes: "..tostring(#treeT))
         DebugPrint("Zone 3 Boards: "..tostring(#boardt))
-        purchaseNodes(treeT)
-        purchaseBoards(boardt)
+        upgradeTreeServiceFunctions.purchaseNodes(treeT)
+        upgradeBoardServiceFunctions.purchaseBoards(boardt)
         task.wait(0.5)
         db = false
     end
@@ -2089,7 +2105,7 @@ local function autoZone3EliteSouls()
 
         for _, v in pairs(Trees.Zone3:GetChildren()) do
             if v:IsA("Model") and v:FindFirstChild("Node") then
-                if isNodeColorCurrency(v.Node, GameEnum.Currency.EliteSouls) == true and checkNodeAvailable(v) == true then
+                if upgradeTreeServiceFunctions.isNodeColorCurrency(v.Node, GameEnum.Currency.EliteSouls) == true and upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                     table.insert(treeT, v)
                 end
             end 
@@ -2104,7 +2120,7 @@ local function autoZone3EliteSouls()
 
                 if zone ~= nil and board ~= nil then
                     if board.Currency ~= GameEnum.Currency.EliteSouls then continue end
-                    if isBoardTypeValid(board.BoardType) == true then
+                    if upgradeBoardServiceFunctions.isBoardTypeValid(board.BoardType) == true then
                         table.insert(boardt, v)
                     end
                 end
@@ -2113,8 +2129,8 @@ local function autoZone3EliteSouls()
 
         DebugPrint("Zone 3 Elite Soul Nodes: "..tostring(#treeT))
         DebugPrint("Zone 3 Elite Soul Boards: "..tostring(#boardt))
-        purchaseNodes(treeT)
-        purchaseBoards(boardt)
+        upgradeTreeServiceFunctions.purchaseNodes(treeT)
+        upgradeBoardServiceFunctions.purchaseBoards(boardt)
         task.wait(0.5)
         db = false
     end
@@ -2141,11 +2157,11 @@ local function autoSoulTemple()
         if db == true then return end
         db = true
 
-        if isTempleBuilt(TempleId.SoulsTemple) ~= true then
-            RequestBuildTemple(TempleId.SoulsTemple)
+        if templeServiceFunctions.isTempleBuilt(TempleId.SoulsTemple) ~= true then
+            templeServiceFunctions.requestBuildTemple(TempleId.SoulsTemple)
         end
 
-        if getTempleLevel(TempleId.SoulsTemple) == getTempleConfig(TempleId.SoulsTemple).MaxLevel then
+        if templeServiceFunctions.getTempleLevel(TempleId.SoulsTemple) == templeServiceFunctions.getTempleConfig(TempleId.SoulsTemple).MaxLevel then
             db = false
             SetSetting("autoSoulTemple", false)
             if ConnectionExists("StatServiceClient.StatChanged(4)") == true then
@@ -2153,12 +2169,12 @@ local function autoSoulTemple()
             end
             autoSoulTempleFunctions:updateText("Auto Soul Temple: "..GetTextFromSetting("autoSoulTemple"))
             autoSoulTempleFunctions:updateGradient(getGradient(GetSetting("autoSoulTemple")))
-            show({Text = "Soul Temple is Maxed! Auto Soul Temple disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Soul Temple is Maxed! Auto Soul Temple disabled.", Duration = 5})
             return
         end
 
-        if isTempleBuilt(TempleId.SoulsTemple) == true then
-            purchaseMaxTemple(Temples.Souls)
+        if templeServiceFunctions.isTempleBuilt(TempleId.SoulsTemple) == true then
+            templeServiceFunctions.purchaseMaxTemple(Temples.Souls)
         end
         task.wait(0.5)
         db = false
@@ -2186,11 +2202,11 @@ local function autoRelicTemple()
         if db == true then return end
         db = true
 
-        if isTempleBuilt(TempleId.RelicsTemple) ~= true then
-            RequestBuildTemple(TempleId.RelicsTemple)
+        if templeServiceFunctions.isTempleBuilt(TempleId.RelicsTemple) ~= true then
+            templeServiceFunctions.requestBuildTemple(TempleId.RelicsTemple)
         end
 
-        if getTempleLevel(TempleId.RelicsTemple) == getTempleConfig(TempleId.RelicsTemple).MaxLevel then
+        if templeServiceFunctions.getTempleLevel(TempleId.RelicsTemple) == templeServiceFunctions.getTempleConfig(TempleId.RelicsTemple).MaxLevel then
             db = false
             SetSetting("autoRelicTemple", false)
             if ConnectionExists("StatServiceClient.StatChanged(5)") == true then
@@ -2198,12 +2214,12 @@ local function autoRelicTemple()
             end
             autoRelicTempleFunctions:updateText("Auto Relic Temple: "..GetTextFromSetting("autoRelicTemple"))
             autoRelicTempleFunctions:updateGradient(getGradient(GetSetting("autoRelicTemple")))
-            show({Text = "Relic Temple is Maxed! Auto Relic Temple disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Relic Temple is Maxed! Auto Relic Temple disabled.", Duration = 5})
             return
         end
 
-        if isTempleBuilt(TempleId.RelicsTemple) == true then
-            purchaseMaxTemple(Temples.Relics)
+        if templeServiceFunctions.isTempleBuilt(TempleId.RelicsTemple) == true then
+            templeServiceFunctions.purchaseMaxTemple(Temples.Relics)
         end
         task.wait(0.5)
         db = false
@@ -2231,11 +2247,11 @@ local function autoBibleTemple()
         if db == true then return end
         db = true
 
-        if isTempleBuilt(TempleId.BibleTemple) ~= true then
-            RequestBuildTemple(TempleId.BibleTemple)
+        if templeServiceFunctions.isTempleBuilt(TempleId.BibleTemple) ~= true then
+            templeServiceFunctions.requestBuildTemple(TempleId.BibleTemple)
         end
 
-        if getTempleLevel(TempleId.BibleTemple) == getTempleConfig(TempleId.BibleTemple).MaxLevel then
+        if templeServiceFunctions.getTempleLevel(TempleId.BibleTemple) == templeServiceFunctions.getTempleConfig(TempleId.BibleTemple).MaxLevel then
             db = false
             SetSetting("autoBibleTemple", false)
             if ConnectionExists("StatServiceClient.StatChanged(6)") == true then
@@ -2243,12 +2259,12 @@ local function autoBibleTemple()
             end
             autoBibleTempleFunctions:updateText("Auto Bible Temple: "..GetTextFromSetting("autoBibleTemple"))
             autoBibleTempleFunctions:updateGradient(getGradient(GetSetting("autoBibleTemple")))
-            show({Text = "Bible Temple is Maxed! Auto Bible Temple disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Bible Temple is Maxed! Auto Bible Temple disabled.", Duration = 5})
             return
         end
 
-        if isTempleBuilt(TempleId.BibleTemple) == true then
-            purchaseMaxTemple(Temples.Bible)
+        if templeServiceFunctions.isTempleBuilt(TempleId.BibleTemple) == true then
+            templeServiceFunctions.purchaseMaxTemple(Temples.Bible)
         end
         task.wait(0.5)
         db = false
@@ -2276,7 +2292,7 @@ local function autoSoulDPBoard()
         if db == true then return end
         db = true
 
-        if getDivinePowerBoardLevel(BoardId.SoulsDivineBoost) == getDivinePowerBoardConfig(BoardId.SoulsDivineBoost).MaxLevel then
+        if templeServiceFunctions.getDivinePowerBoardLevel(BoardId.SoulsDivineBoost) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.SoulsDivineBoost).MaxLevel then
             db = false
             SetSetting("autoSoulDPBoard", false)
             if ConnectionExists("StatServiceClient.StatChanged(7)") == true then
@@ -2284,7 +2300,7 @@ local function autoSoulDPBoard()
             end
             autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..GetTextFromSetting("autoSoulDPBoard"))
             autoSoulDPBoardFunctions:updateGradient(getGradient(GetSetting("autoSoulDPBoard")))
-            show({Text = "Soul DP Board is Maxed! Auto Soul DP Board disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Soul DP Board is Maxed! Auto Soul DP Board disabled.", Duration = 5})
             return
         end
 
@@ -2301,7 +2317,7 @@ local function autoSoulDPBoard()
         end)()
 
         if board ~= nil then
-            purchaseMaxDPBoard(board)
+            templeServiceFunctions.purchaseMaxDPBoard(board)
         end
         task.wait(0.5)
         db = false
@@ -2329,7 +2345,7 @@ local function autoRelicDPBoard()
         if db == true then return end
         db = true
 
-        if getDivinePowerBoardLevel(BoardId.RelicsDivineBoost) == getDivinePowerBoardConfig(BoardId.RelicsDivineBoost).MaxLevel then
+        if templeServiceFunctions.getDivinePowerBoardLevel(BoardId.RelicsDivineBoost) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.RelicsDivineBoost).MaxLevel then
             db = false
             SetSetting("autoRelicDPBoard", false)
             if ConnectionExists("StatServiceClient.StatChanged(8)") == true then
@@ -2337,7 +2353,7 @@ local function autoRelicDPBoard()
             end
             autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..GetTextFromSetting("autoRelicDPBoard"))
             autoRelicDPBoardFunctions:updateGradient(getGradient(GetSetting("autoRelicDPBoard")))
-            show({Text = "Relic DP Board is Maxed! Auto Relic DP Board disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Relic DP Board is Maxed! Auto Relic DP Board disabled.", Duration = 5})
             return
         end
 
@@ -2354,7 +2370,7 @@ local function autoRelicDPBoard()
         end)()
 
         if board ~= nil then
-            purchaseMaxDPBoard(board)
+            templeServiceFunctions.purchaseMaxDPBoard(board)
         end
         task.wait(0.5)
         db = false
@@ -2382,7 +2398,7 @@ local function autoBibleDPBoard()
         if db == true then return end
         db = true
 
-        if getDivinePowerBoardLevel(BoardId.BibleDivineBoost) == getDivinePowerBoardConfig(BoardId.BibleDivineBoost).MaxLevel then
+        if templeServiceFunctions.getDivinePowerBoardLevel(BoardId.BibleDivineBoost) == templeServiceFunctions.getDivinePowerBoardConfig(BoardId.BibleDivineBoost).MaxLevel then
             db = false
             SetSetting("autoBibleDPBoard", false)
             if ConnectionExists("StatServiceClient.StatChanged(9)") == true then
@@ -2390,7 +2406,7 @@ local function autoBibleDPBoard()
             end
             autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..GetTextFromSetting("autoBibleDPBoard"))
             autoBibleDPBoardFunctions:updateGradient(getGradient(GetSetting("autoBibleDPBoard")))
-            show({Text = "Bible DP Board is Maxed! Auto Bible DP Board disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Bible DP Board is Maxed! Auto Bible DP Board disabled.", Duration = 5})
             return
         end
 
@@ -2407,7 +2423,7 @@ local function autoBibleDPBoard()
         end)()
 
         if board ~= nil then
-            purchaseMaxDPBoard(board)
+            templeServiceFunctions.purchaseMaxDPBoard(board)
         end
         task.wait(0.5)
         db = false
@@ -2435,13 +2451,13 @@ local function autoDepositMainTemple()
         if db == true then return end
         db = true
 
-        if isTempleBuilt(TempleId.MainTemple) ~= true then
-            if areAllCurrencyTemplesCompleted() == true then
-                RequestBuildTemple(TempleId.MainTemple)
+        if templeServiceFunctions.isTempleBuilt(TempleId.MainTemple) ~= true then
+            if templeServiceFunctions.areAllCurrencyTemplesCompleted() == true then
+                templeServiceFunctions.requestBuildTemple(TempleId.MainTemple)
             end
         end
 
-        if getTempleLevel(TempleId.MainTemple) == getTempleConfig(TempleId.MainTemple).MaxLevel then
+        if templeServiceFunctions.getTempleLevel(TempleId.MainTemple) == templeServiceFunctions.getTempleConfig(TempleId.MainTemple).MaxLevel then
             db = false
             SetSetting("autoDepositMainTemple", false)
             if ConnectionExists("StatServiceClient.StatChanged(10)") == true then
@@ -2449,13 +2465,13 @@ local function autoDepositMainTemple()
             end
             autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..GetTextFromSetting("autoDepositMainTemple"))
             autoDepositMainTempleFunctions:updateGradient(getGradient(GetSetting("autoDepositMainTemple")))
-            show({Text = "Main Temple is Maxed! Auto Deposit Main Temple disabled.", Duration = 5})
+            popupServiceFunctions.show({Text = "Main Temple is Maxed! Auto Deposit Main Temple disabled.", Duration = 5})
             return
         end
 
-        if isTempleBuilt(TempleId.MainTemple) == true then
-            depositAll()
-            RequestUpgradeTemple(TempleId.MainTemple)
+        if templeServiceFunctions.isTempleBuilt(TempleId.MainTemple) == true then
+            templeServiceFunctions.depositAll()
+            templeServiceFunctions.requestUpgradeTemple(TempleId.MainTemple)
         end
         task.wait(0.5)
         db = false
@@ -2487,14 +2503,14 @@ local function autoHellStairsNodes()
 
         for _, v in pairs(Trees.HellStairs:GetChildren()) do
             if v:IsA("Model") and v:FindFirstChild("Node") then
-                if checkNodeAvailable(v) == true then
+                if upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                     table.insert(t, v)
                 end
             end 
         end
 
         DebugPrint("Hell Stairs Nodes: "..tostring(#t))
-        purchaseNodes(t)
+        upgradeTreeServiceFunctions.purchaseNodes(t)
         task.wait(0.5)
         db = false
     end
@@ -2525,14 +2541,14 @@ local function autoStairwayNodes()
 
         for _, v in pairs(Trees.Stairway:GetChildren()) do
             if v:IsA("Model") and v:FindFirstChild("Node") then
-                if checkNodeAvailable(v) == true then
+                if upgradeTreeServiceFunctions.checkNodeAvailable(v) == true then
                     table.insert(t, v)
                 end
             end 
         end
 
         DebugPrint("Stairway Nodes: "..tostring(#t))
-        purchaseNodes(t)
+        upgradeTreeServiceFunctions.purchaseNodes(t)
         task.wait(0.5)
         db = false
     end
@@ -2564,7 +2580,7 @@ local function autoUnderworld()
 
         for _, v in pairs(Trees["Zone_5(Underworld)"].Nodes:GetChildren()) do
             if v:IsA("Model") and v:FindFirstChild("Node") then
-                if isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Embers) == true and checkNodeAvailable(v, true) == true then
+                if upgradeTreeServiceFunctions.isNodeColorCurrency(v.Node.Node, GameEnum.Currency.Embers) == true and upgradeTreeServiceFunctions.checkNodeAvailable(v, true) == true then
                     table.insert(treeT, v)
                 end
             end 
@@ -2578,7 +2594,7 @@ local function autoUnderworld()
                 local board = zone and zone.Boards[boardId]
 
                 if zone ~= nil and board ~= nil then
-                    if isBoardTypeValid(board.BoardType) == true then
+                    if upgradeBoardServiceFunctions.isBoardTypeValid(board.BoardType) == true then
                         table.insert(boardt, v)
                     end
                 end
@@ -2587,8 +2603,8 @@ local function autoUnderworld()
 
         DebugPrint("Underworld Nodes: "..tostring(#treeT))
         DebugPrint("Underworld Boards: "..tostring(#boardt))
-        purchaseNodes(treeT, true)
-        purchaseBoards(boardt)
+        upgradeTreeServiceFunctions.purchaseNodes(treeT, true)
+        upgradeBoardServiceFunctions.purchaseBoards(boardt)
         task.wait(0.5)
         db = false
     end
@@ -2605,7 +2621,7 @@ local function autoUnderworld()
 end
 
 -------------------->> Close Buttons <<--------------------
-show({Text = "Loading connections..."; Duration = 2;})
+popupServiceFunctions.show({Text = "Loading connections..."; Duration = 2;})
 
 do
     NewConnection("closeButton.MouseButton1Click", closeButton.MouseButton1Click:Connect(function()
@@ -2669,18 +2685,18 @@ do
     end))
 
     NewConnection("ascendButton.MouseButton1Click", ascendButton.MouseButton1Click:Connect(function()
-        RequestAscension()
-        show({Text = "Requesting Ascension...", Duration = 3})
+        ascensionServiceFunctions.RequestAscension()
+        popupServiceFunctions.show({Text = "Requesting Ascension...", Duration = 3})
     end))
 
     NewConnection("copyScriptButton.MouseButton1Click", copyScriptButton.MouseButton1Click:Connect(function()
         setclipboard(scriptHttp)
-        show({Text = "Script Copied to Clipboard!", Duration = 3})
+        popupServiceFunctions.show({Text = "Script Copied to Clipboard!", Duration = 3})
     end))
 
     NewConnection("queueOnTeleportButton.MouseButton1Click", queueOnTeleportButton.MouseButton1Click:Connect(function()
         queue_on_teleport(scriptHttp)
-        show({Text = "Script Queued on Teleport! Can't be disabled until teleportation is complete.", Duration = 3})
+        popupServiceFunctions.show({Text = "Script Queued on Teleport! Can't be disabled until teleportation is complete.", Duration = 3})
     end))
 end
 
@@ -2765,4 +2781,4 @@ end
 -------------------->> Loading Ended <<--------------------
 
 print("Loading End Time: "..tostring(DateTime.now().UnixTimestamp - LoadingTime))
-show({Text = "GigaHub took "..tostring(DateTime.now().UnixTimestamp - LoadingTime).." seconds to load."})
+popupServiceFunctions.show({Text = "GigaHub took "..tostring(DateTime.now().UnixTimestamp - LoadingTime).." seconds to load."})
