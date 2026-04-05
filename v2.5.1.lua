@@ -1,4 +1,5 @@
 -------------------->> Execution Check <<--------------------
+local link = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v2.5.1.lua", true))()'
 
 if game.PlaceId ~= 94264573845314 then
     warn("Please execute this script in the correct game, 'Faith Incremental'! | PlaceId: 94264573845314")
@@ -71,6 +72,7 @@ local Boards  = Work.Boards
 local Temples = Work.Temples
 local Trees   = Work.Trees
 
+local DPBoards = Temples.DivineUpgrades
 local EliteSpawnBoard = Boards.Zone4.EliteSpawner.EliteSpawnBoard
 local SpawnButton     = EliteSpawnBoard.Container.UnlockedContent.SpawnButton
 
@@ -118,11 +120,12 @@ local theme = require(styles.Theme)
 
 local Normal = {
     autoBuyTrialShop = false;
+    autoRadianceBoostWhenMax = false;
+    autoAscend = false;
     FarmSpirits = false;
     autoSpawnEliteSpirit = false;
     FarmBossSpirit = false;
     FarmSurge = false;
-    autoRadianceBoostWhenMax = false;
     autoReincarnate = false;
     autoClickRelic = false;
 
@@ -130,7 +133,6 @@ local Normal = {
     autoZone2 = false;
     autoZone3NoEliteSouls = false;
     autoZone3EliteSouls = false;
-    autoUnderworld = false;
 
     autoSoulTemple = false;
     autoRelicTemple = false;
@@ -142,6 +144,9 @@ local Normal = {
     
     autoHellStairsNodes = false;
     autoStairwayNodes = false;
+
+    autoUnderworld = false;
+    autoUnderworld2 = false;
 
     rebirthIfUnAff = false;
     spiritsPaused = false;
@@ -188,18 +193,18 @@ do
         print("-------------------->> Setting back to Normal <<--------------------")
         getgenv().Settings = Normal
         getgenv().Settings.autoBuyTrialShop         = false;
+        getgenv().Settings.autoRadianceBoostWhenMax = false;
+        getgenv().Settings.autoAscend               = false;
         getgenv().Settings.FarmSpirits              = false
         getgenv().Settings.autoSpawnEliteSpirit     = false
         getgenv().Settings.FarmBossSpirit           = false
         getgenv().Settings.FarmSurge                = false
-        getgenv().Settings.autoRadianceBoostWhenMax = false;
         getgenv().Settings.autoReincarnate          = false;
         getgenv().Settings.autoClickRelic           = false;
         getgenv().Settings.autoZone1                = false;
         getgenv().Settings.autoZone2                = false;
         getgenv().Settings.autoZone3NoEliteSouls    = false;
         getgenv().Settings.autoZone3EliteSouls      = false;
-        getgenv().Settings.autoUnderworld           = false;
         getgenv().Settings.autoSoulTemple           = false;
         getgenv().Settings.autoRelicTemple          = false;
         getgenv().Settings.autoBibleTemple          = false;
@@ -209,6 +214,8 @@ do
         getgenv().Settings.autoDepositMainTemple    = false;
         getgenv().Settings.autoHellStairsNodes      = false;
         getgenv().Settings.autoStairwayNodes        = false;
+        getgenv().Settings.autoUnderworld           = false;
+        getgenv().Settings.autoUnderworld2          = false;
         PrintTable(getgenv().Settings)
     end
 end
@@ -268,6 +275,12 @@ local function NewConnection(Identifier, Connection)
 
     getgenv().Settings.Connections[Identifier] = Connection
     DebugPrint("Made a new connection for "..Identifier)
+end
+
+local function ConnectionExists(Identifier)
+    DebugAssert(typeof(Identifier) == 'string', ("Expected 'string' got '%s'!"):format(typeof(Identifier)))
+
+    return getgenv().Settings.Connections[Identifier] ~= nil
 end
 
 local function DestroyConnection(Identifier)
@@ -408,8 +421,12 @@ end
 
 -------------------->> AscensionServiceClient <<--------------------
 
-local function RequestAcension()
+local function RequestAscension()
     AscensionServiceClient.RequestAscension()
+end
+
+local function getAPPreview()
+    return AscensionServiceClient.GetAPPreview()
 end
 
 -------------------->> RelicServiceClient <<--------------------
@@ -469,12 +486,20 @@ local function getTempleLevel(id)
     return TempleServiceClient.GetTempleLevel(id)
 end
 
+local function getDivinePowerBoardLevel(id)
+    return TempleServiceClient.GetDivinePowerBoardLevel(id)
+end
+
 local function isTempleBuilt(id)
     return TempleServiceClient.IsTempleBuilt(id)
 end
 
-local function getDivinePowerBoardLevel(id)
-    return TempleServiceClient.GetDivinePowerBoardLevel(id)
+local function getTempleConfig(id)
+    return TempleServiceClient.GetTempleConfig(id)
+end
+
+local function getDivinePowerBoardConfig(id)
+    return TempleBoardServiceClient.GetDivinePowerBoardConfig(id)
 end
 
 local function areAllCurrencyTemplesCompleted()
@@ -518,6 +543,54 @@ local function RequestDeposit(currency, percentage)
         ["Percentage"] = percentage
     })
     ]]
+end
+
+local function purchaseMaxTemple(mod: Model)
+    local templeId = getTempleId(mod)
+
+    if templeId ~= nil then
+        local BuyMaxButton = (function()
+            for _, but in ipairs(mod:GetDescendants()) do
+                if but:IsA("TextButton") and but.Name:lower() == "buymaxbutton" then
+                    return but
+                end
+            end
+
+            return nil
+        end)()
+
+        if BuyMaxButton ~= nil then
+            if typeof(firesignal) == "function" then
+                firesignal(BuyMaxButton.Activated)
+            end
+        else
+            RequestUpgradeTemple(templeId, 1)
+        end
+    end
+end
+
+local function purchaseMaxDPBoard(part: Part)
+    local boardId = getBoardId(part)
+
+    if boardId ~= nil then
+        local BuyMaxButton = (function()
+            for _, but in ipairs(part:GetDescendants()) do
+                if but:IsA("TextButton") and but.Name:lower() == "buymaxbutton" then
+                    return but
+                end
+            end
+
+            return nil
+        end)()
+
+        if BuyMaxButton ~= nil then
+            if typeof(firesignal) == "function" then
+                firesignal(BuyMaxButton.Activated)
+            end
+        else
+            RequestUpgradeDPBoard(boardId, 1)
+        end
+    end
 end
 
 local function depositAll()
@@ -564,9 +637,9 @@ local function purchaseBoards(t: {Part})
         if zoneId ~= nil and boardId ~= nil then
             if v:FindFirstChild("UpgradeBoardUI") then
                 pcall(function()
-                    local boardUI = v:FindFirstChild("UpgradeBoardUI")
-                    local fr = boardUI.Frame
-                    local content = fr.Content
+                    -- local boardUI = v:FindFirstChild("UpgradeBoardUI")
+                    -- local fr = boardUI.Frame
+                    -- local content = fr.Content
                     -- local title = (function()
                     --     for _, v in ipairs(content:GetDescendants()) do
                     --         if v:IsA("TextLabel") and v.Name:lower() == "title" then
@@ -585,7 +658,7 @@ local function purchaseBoards(t: {Part})
                     --local maxLevel = tonumber(splitTwo[2])
 
                     local BuyMaxButton = (function()
-                        for _, but in ipairs(content:GetDescendants()) do
+                        for _, but in ipairs(v:GetDescendants()) do
                             if but:IsA("TextButton") and but.Name:lower() == "buymaxbutton" then
                                 return but
                             end
@@ -852,7 +925,7 @@ local function getGradient(Setting)
 end
 
 -------------------->> construction <<--------------------
-show({Text = "Loading, please wait..."; Duration = 3;})
+show({Text = "Loading, please wait..."; Duration = 2;})
 
 local function constructGradient(options)
     options = Validate({
@@ -1268,7 +1341,7 @@ local rebirthIfUnAffButton, rebirthIfUnAffFunctions = constructImageButton({
     Parent = settingsFrame;
     Text = "Auto Rebirth for Elite Spirts: "..GetTextFromSetting("rebirthIfUnAff");
     Gradient = getGradient(GetSetting("rebirthIfUnAff"));
-    LayoutOrder = 0;
+    LayoutOrder = 1;
 })
 constructUiAspect({Parent = rebirthIfUnAffButton; AspectRatio = 2.854})
 
@@ -1276,7 +1349,7 @@ local autoBuyTrialShopButton, autoBuyTrialShopFunctions = constructImageButton({
     Parent = settingsFrame;
     Text = "Auto Buy Trial Shop: "..GetTextFromSetting("autoBuyTrialShop");
     Gradient = getGradient(GetSetting("autoBuyTrialShop"));
-    LayoutOrder = 1;
+    LayoutOrder = 2;
 })
 constructUiAspect({Parent = autoBuyTrialShopButton; AspectRatio = 2.854})
 
@@ -1284,17 +1357,41 @@ local autoRadianceBoostButton, autoRadianceBoostFunctions = constructImageButton
     Parent = settingsFrame;
     Text = "Auto Radiance Boost When Max: "..GetTextFromSetting("autoRadianceBoostWhenMax");
     Gradient = getGradient(GetSetting("autoRadianceBoostWhenMax"));
-    LayoutOrder = 2;
+    LayoutOrder = 3;
 })
 constructUiAspect({Parent = autoRadianceBoostButton; AspectRatio = 2.854})
 
-local acsendButton = constructImageButton({
+local autoAscendButton, autoAscendFunctions = constructImageButton({
+    Parent = settingsFrame;
+    Text = "Auto Ascend: "..GetTextFromSetting("autoAscend");
+    Gradient = getGradient(GetSetting("autoAscend"));
+    LayoutOrder = 4;
+})
+constructUiAspect({Parent = autoAscendButton; AspectRatio = 2.854})
+
+local ascendButton = constructImageButton({
     Parent = settingsFrame;
     Text = "Ascend";
     Gradient = gradients.cyan;
+    LayoutOrder = 998;
+})
+constructUiAspect({Parent = ascendButton; AspectRatio = 2.854})
+
+local copyScriptButton = constructImageButton({
+    Parent = settingsFrame;
+    Text = "Copy Script";
+    Gradient = gradients.cyan;
     LayoutOrder = 999;
 })
-constructUiAspect({Parent = acsendButton; AspectRatio = 2.854})
+constructUiAspect({Parent = copyScriptButton; AspectRatio = 2.854})
+
+local queueOnTeleportButton = constructImageButton({
+    Parent = settingsFrame;
+    Text = "Queue on Teleport";
+    Gradient = gradients.cyan;
+    LayoutOrder = 1000;
+})
+constructUiAspect({Parent = queueOnTeleportButton; AspectRatio = 2.854})
 
 -------------------->> Upgrades Frame <<--------------------
 
@@ -1330,19 +1427,67 @@ local autoZone3EliteSoulsButton, autoZone3EliteSoulsFunctions = constructImageBu
 })
 constructUiAspect({Parent = autoZone3EliteSoulsButton; AspectRatio = 2.854})
 
-local autoUnderworldButton, autoUnderworldFunctions = constructImageButton({
+local autoSoulTempleButton, autoSoulTempleFunctions = constructImageButton({
     Parent = upgradesFrame;
-    Text = "Auto Underworld: "..GetTextFromSetting("autoUnderworld");
-    Gradient = getGradient(GetSetting("autoUnderworld"));
+    Text = "Auto Soul Temple: "..GetTextFromSetting("autoSoulTemple");
+    Gradient = getGradient(GetSetting("autoSoulTemple"));
     LayoutOrder = 4;
 })
-constructUiAspect({Parent = autoUnderworldButton; AspectRatio = 2.854})
+constructUiAspect({Parent = autoSoulTempleButton; AspectRatio = 2.854})
+
+local autoRelicTempleButton, autoRelicTempleFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Relic Temple: "..GetTextFromSetting("autoRelicTemple");
+    Gradient = getGradient(GetSetting("autoRelicTemple"));
+    LayoutOrder = 5;
+})
+constructUiAspect({Parent = autoRelicTempleButton; AspectRatio = 2.854})
+
+local autoBibleTempleButton, autoBibleTempleFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Bible Temple: "..GetTextFromSetting("autoBibleTemple");
+    Gradient = getGradient(GetSetting("autoBibleTemple"));
+    LayoutOrder = 6;
+})
+constructUiAspect({Parent = autoBibleTempleButton; AspectRatio = 2.854})
+
+local autoSoulDPBoardButton, autoSoulDPBoardFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Soul DP Board: "..GetTextFromSetting("autoSoulDPBoard");
+    Gradient = getGradient(GetSetting("autoSoulDPBoard"));
+    LayoutOrder = 7;
+})
+constructUiAspect({Parent = autoSoulDPBoardButton; AspectRatio = 2.854})
+
+local autoRelicDPBoardButton, autoRelicDPBoardFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Relic DP Board: "..GetTextFromSetting("autoRelicDPBoard");
+    Gradient = getGradient(GetSetting("autoRelicDPBoard"));
+    LayoutOrder = 8;
+})
+constructUiAspect({Parent = autoRelicDPBoardButton; AspectRatio = 2.854})
+
+local autoBibleDPBoardButton, autoBibleDPBoardFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Bible DP Board: "..GetTextFromSetting("autoBibleDPBoard");
+    Gradient = getGradient(GetSetting("autoBibleDPBoard"));
+    LayoutOrder = 9;
+})
+constructUiAspect({Parent = autoBibleDPBoardButton; AspectRatio = 2.854})
+
+local autoDepositMainTempleButton, autoDepositMainTempleFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Deposit Main Temple: "..GetTextFromSetting("autoDepositMainTemple");
+    Gradient = getGradient(GetSetting("autoDepositMainTemple"));
+    LayoutOrder = 10;
+})
+constructUiAspect({Parent = autoDepositMainTempleButton; AspectRatio = 2.854})
 
 local autoHellStairsNodesButton, autoHellStairsNodesFunctions = constructImageButton({
     Parent = upgradesFrame;
     Text = "Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes");
     Gradient = getGradient(GetSetting("autoHellStairsNodes"));
-    LayoutOrder = 12;
+    LayoutOrder = 11;
 })
 constructUiAspect({Parent = autoHellStairsNodesButton; AspectRatio = 2.854})
 
@@ -1350,9 +1495,17 @@ local autoStairwayNodesButton, autoStairwayNodesFunctions = constructImageButton
     Parent = upgradesFrame;
     Text = "Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes");
     Gradient = getGradient(GetSetting("autoStairwayNodes"));
-    LayoutOrder = 13;
+    LayoutOrder = 12;
 })
 constructUiAspect({Parent = autoStairwayNodesButton; AspectRatio = 2.854})
+
+local autoUnderworldButton, autoUnderworldFunctions = constructImageButton({
+    Parent = upgradesFrame;
+    Text = "Auto Underworld: "..GetTextFromSetting("autoUnderworld");
+    Gradient = getGradient(GetSetting("autoUnderworld"));
+    LayoutOrder = 13;
+})
+constructUiAspect({Parent = autoUnderworldButton; AspectRatio = 2.854})
 
 -------------------->> Main Frame <<--------------------
 
@@ -1410,6 +1563,7 @@ local protectGui = false
 
 if protectGui == true then
     do
+        show({Text = "Protecting GUI..."; Duration = 3;})
         print("\n\n\n-------------------->> ProtectGui <<--------------------\n")
         local startTime = DateTime.now().UnixTimestamp
 
@@ -1425,7 +1579,8 @@ if protectGui == true then
     end
 end
 
--------------------->> Gui Functions <<--------------------
+-------------------->> Main <<--------------------
+show({Text = "Loading functions..."; Duration = 2;})
 
 local function AutoFarmSpirits()
     SetSetting("FarmSpirits", not GetSetting("FarmSpirits"))
@@ -1461,52 +1616,6 @@ local function AutoFarmSpirits()
             fightSpirit()
         end
     end
-end
-
-local function AutoFarmSurge()
-    SetSetting("FarmSurge", not GetSetting("FarmSurge"))
-    farmSurgeFunctions:updateText("Farm Surge: "..GetTextFromSetting("FarmSurge"))
-    farmSurgeFunctions:updateGradient(getGradient(GetSetting("FarmSurge")))
-
-    local function farmSurge()
-        if (isSurgeActive() == true and getSurgePosition() ~= nil) and GetSetting("FarmSurge") == true then
-            pcall(function()
-                if GetSetting("surgePaused") ~= true and GetHumanoidRootPart() ~= nil then
-                    local lastCFrame = GetLastCFrame()
-                    repeat
-                        task.wait()
-                        SetSetting("spiritsPaused", true)
-                        GetHumanoidRootPart().CFrame = CFrame.new(getSurgePosition() + Vector3.new(0, 2.75, 0))
-                        GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
-                    until isSurgeActive() == false or getSurgePosition() == nil or GetSetting("FarmSurge") ~= true or GetSetting("surgePaused") == true
-                    GetHumanoidRootPart().CFrame = lastCFrame
-                end
-            end)
-
-            if GetSetting("surgePaused") == true then
-                repeat task.wait() until GetSetting("surgePaused") ~= true or GetSetting("FarmSurge") ~= true
-            end
-        else
-            if GetSetting("surgePaused") ~= true then
-                SetSetting("spiritsPaused", false)
-            end
-        end
-    end
-
-    if GetSetting("FarmSurge") == true then
-        farmSurge()
-
-        while task.wait(0.1) do
-             if GetSetting("FarmSurge") ~= true then break end
-            farmSurge()
-        end
-    end
-end
-
-local function AutoRebirthIfUnAff()
-    SetSetting("rebirthIfUnAff", not GetSetting("rebirthIfUnAff"))
-    rebirthIfUnAffFunctions:updateText("Auto Rebirth for Elite Spirts: "..GetTextFromSetting("rebirthIfUnAff"))
-    rebirthIfUnAffFunctions:updateGradient(getGradient(GetSetting("rebirthIfUnAff")))
 end
 
 local function AutoSpawnEliteSpirit()
@@ -1593,6 +1702,90 @@ local function AutoFarmBossSpirit()
     end
 end
 
+local function AutoFarmSurge()
+    SetSetting("FarmSurge", not GetSetting("FarmSurge"))
+    farmSurgeFunctions:updateText("Farm Surge: "..GetTextFromSetting("FarmSurge"))
+    farmSurgeFunctions:updateGradient(getGradient(GetSetting("FarmSurge")))
+
+    local function farmSurge()
+        if (isSurgeActive() == true and getSurgePosition() ~= nil) and GetSetting("FarmSurge") == true then
+            pcall(function()
+                if GetSetting("surgePaused") ~= true and GetHumanoidRootPart() ~= nil then
+                    local lastCFrame = GetLastCFrame()
+                    repeat
+                        task.wait()
+                        SetSetting("spiritsPaused", true)
+                        GetHumanoidRootPart().CFrame = CFrame.new(getSurgePosition() + Vector3.new(0, 2.75, 0))
+                        GetHumanoid():ChangeState(Enum.HumanoidStateType.GettingUp)
+                    until isSurgeActive() == false or getSurgePosition() == nil or GetSetting("FarmSurge") ~= true or GetSetting("surgePaused") == true
+                    GetHumanoidRootPart().CFrame = lastCFrame
+                end
+            end)
+
+            if GetSetting("surgePaused") == true then
+                repeat task.wait() until GetSetting("surgePaused") ~= true or GetSetting("FarmSurge") ~= true
+            end
+        else
+            if GetSetting("surgePaused") ~= true then
+                SetSetting("spiritsPaused", false)
+            end
+        end
+    end
+
+    if GetSetting("FarmSurge") == true then
+        farmSurge()
+
+        while task.wait(0.1) do
+             if GetSetting("FarmSurge") ~= true then break end
+            farmSurge()
+        end
+    end
+end
+
+local function AutoReincarnate()
+    SetSetting("autoReincarnate", not GetSetting("autoReincarnate"))
+    autoReincarnateFunctions:updateText("Auto Reincarnate: "..GetTextFromSetting("autoReincarnate"))
+    autoReincarnateFunctions:updateGradient(getGradient(GetSetting("autoReincarnate")))
+
+    local function reincarnate()
+        if reincarnationIsMaxed() ~= true then
+            RequestReincarnation()
+        end
+    end
+
+    if GetSetting("autoReincarnate") == true then
+        reincarnate()
+
+        while task.wait(1) do
+            if GetSetting("autoReincarnate") ~= true then break end
+            reincarnate()
+        end
+    end
+end
+
+local function AutoClickRelic()
+    SetSetting("autoClickRelic", not GetSetting("autoClickRelic"))
+    autoClickRelicFunctions:updateText("Auto Click Relic: "..GetTextFromSetting("autoClickRelic"))
+    autoClickRelicFunctions:updateGradient(getGradient(GetSetting("autoClickRelic")))
+
+    if GetSetting("autoClickRelic") == true then
+        relicClick()
+
+        while task.wait() do
+            if GetSetting("autoClickRelic") ~= true then break end
+            relicClick()
+        end
+    end
+end
+
+-------------------->> Settings <<--------------------
+
+local function AutoRebirthIfUnAff()
+    SetSetting("rebirthIfUnAff", not GetSetting("rebirthIfUnAff"))
+    rebirthIfUnAffFunctions:updateText("Auto Rebirth for Elite Spirts: "..GetTextFromSetting("rebirthIfUnAff"))
+    rebirthIfUnAffFunctions:updateGradient(getGradient(GetSetting("rebirthIfUnAff")))
+end
+
 local function AutoBuyTrialShop()
     SetSetting("autoBuyTrialShop", not GetSetting("autoBuyTrialShop"))
     autoBuyTrialShopFunctions:updateText("Auto Buy Trial Shop: "..GetTextFromSetting("autoBuyTrialShop"))
@@ -1650,41 +1843,37 @@ local function AutoRadianceBoostWhenMax()
     end
 end
 
-local function autoReincarnate()
-    SetSetting("autoReincarnate", not GetSetting("autoReincarnate"))
-    autoReincarnateFunctions:updateText("Auto Reincarnate: "..GetTextFromSetting("autoReincarnate"))
-    autoReincarnateFunctions:updateGradient(getGradient(GetSetting("autoReincarnate")))
+local function AutoAscend()
+    SetSetting("autoAscend", not GetSetting("autoAscend"))
+    autoAscendFunctions:updateText("Auto Ascend: "..GetTextFromSetting("autoAscend"))
+    autoAscendFunctions:updateGradient(getGradient(GetSetting("autoAscend")))
 
-    local function reincarnate()
-        if reincarnationIsMaxed() ~= true then
-            RequestReincarnation()
+    local db = false
+
+    local function ascend()
+        if db == true then return end
+        db = true
+
+        if getAPPreview() >= 12 then
+            RequestAscension()
         end
+
+        task.wait(0.5)
+        db = false
     end
 
-    if GetSetting("autoReincarnate") == true then
-        reincarnate()
+    if GetSetting("autoRadianceBoostWhenMax") == true then
+        ascend()
 
-        while task.wait(1) do
-            if GetSetting("autoReincarnate") ~= true then break end
-            reincarnate()
-        end
-    end
-end
-
-local function autoClickRelic()
-    SetSetting("autoClickRelic", not GetSetting("autoClickRelic"))
-    autoClickRelicFunctions:updateText("Auto Click Relic: "..GetTextFromSetting("autoClickRelic"))
-    autoClickRelicFunctions:updateGradient(getGradient(GetSetting("autoClickRelic")))
-
-    if GetSetting("autoClickRelic") == true then
-        relicClick()
-
-        while task.wait() do
-            if GetSetting("autoClickRelic") ~= true then break end
-            relicClick()
-        end
+        NewConnection("StatServiceClient.StatChanged(SettingFrame)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            ascend()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(SettingFrame)")
     end
 end
+
+-------------------->> Upgrades <<--------------------
 
 local function autoZone1()
     SetSetting("autoZone1", not GetSetting("autoZone1"))
@@ -1873,7 +2062,7 @@ local function autoZone3NoEliteSouls()
         db = false
     end
 
-    if GetSetting("autoZone3") == true then
+    if GetSetting("autoZone3NoEliteSouls") == true then
         auto()
 
         NewConnection("StatServiceClient.StatChanged(2)", StatServiceClient.StatChanged:Connect(function(stat, value)
@@ -1941,6 +2130,424 @@ local function autoZone3EliteSouls()
     end
 end
 
+local function autoSoulTemple()
+    SetSetting("autoSoulTemple", not GetSetting("autoSoulTemple"))
+    autoSoulTempleFunctions:updateText("Auto Soul Temple: "..GetTextFromSetting("autoSoulTemple"))
+    autoSoulTempleFunctions:updateGradient(getGradient(GetSetting("autoSoulTemple")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if isTempleBuilt(TempleId.SoulsTemple) ~= true then
+            RequestBuildTemple(TempleId.SoulsTemple)
+        end
+
+        if getTempleLevel(TempleId.SoulsTemple) == getTempleConfig(TempleId.SoulsTemple).MaxLevel then
+            db = false
+            SetSetting("autoSoulTemple", false)
+            if ConnectionExists("StatServiceClient.StatChanged(4)") == true then
+                 DestroyConnection("StatServiceClient.StatChanged(4)")
+            end
+            autoSoulTempleFunctions:updateText("Auto Soul Temple: "..GetTextFromSetting("autoSoulTemple"))
+            autoSoulTempleFunctions:updateGradient(getGradient(GetSetting("autoSoulTemple")))
+            show({Text = "Soul Temple is Maxed! Auto Soul Temple disabled.", Duration = 5})
+            return
+        end
+
+        if isTempleBuilt(TempleId.SoulsTemple) == true then
+            purchaseMaxTemple(Temples.Souls)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoSoulTemple") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(4)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(4)")
+    end
+end
+
+local function autoRelicTemple()
+    SetSetting("autoRelicTemple", not GetSetting("autoRelicTemple"))
+    autoRelicTempleFunctions:updateText("Auto Relic Temple: "..GetTextFromSetting("autoRelicTemple"))
+    autoRelicTempleFunctions:updateGradient(getGradient(GetSetting("autoRelicTemple")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if isTempleBuilt(TempleId.RelicsTemple) ~= true then
+            RequestBuildTemple(TempleId.RelicsTemple)
+        end
+
+        if getTempleLevel(TempleId.RelicsTemple) == getTempleConfig(TempleId.RelicsTemple).MaxLevel then
+            db = false
+            SetSetting("autoRelicTemple", false)
+            if ConnectionExists("StatServiceClient.StatChanged(5)") == true then
+                 DestroyConnection("StatServiceClient.StatChanged(5)")
+            end
+            autoRelicTempleFunctions:updateText("Auto Relic Temple: "..GetTextFromSetting("autoRelicTemple"))
+            autoRelicTempleFunctions:updateGradient(getGradient(GetSetting("autoRelicTemple")))
+            show({Text = "Relic Temple is Maxed! Auto Relic Temple disabled.", Duration = 5})
+            return
+        end
+
+        if isTempleBuilt(TempleId.RelicsTemple) == true then
+            purchaseMaxTemple(Temples.Relics)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoRelicTemple") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(5)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(5)")
+    end
+end
+
+local function autoBibleTemple()
+    SetSetting("autoBibleTemple", not GetSetting("autoBibleTemple"))
+    autoBibleTempleFunctions:updateText("Auto Bible Temple: "..GetTextFromSetting("autoBibleTemple"))
+    autoBibleTempleFunctions:updateGradient(getGradient(GetSetting("autoBibleTemple")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if isTempleBuilt(TempleId.BibleTemple) ~= true then
+            RequestBuildTemple(TempleId.BibleTemple)
+        end
+
+        if getTempleLevel(TempleId.BibleTemple) == getTempleConfig(TempleId.BibleTemple).MaxLevel then
+            db = false
+            SetSetting("autoBibleTemple", false)
+            if ConnectionExists("StatServiceClient.StatChanged(6)") == true then
+                DestroyConnection("StatServiceClient.StatChanged(6)")
+            end
+            autoBibleTempleFunctions:updateText("Auto Bible Temple: "..GetTextFromSetting("autoBibleTemple"))
+            autoBibleTempleFunctions:updateGradient(getGradient(GetSetting("autoBibleTemple")))
+            show({Text = "Bible Temple is Maxed! Auto Bible Temple disabled.", Duration = 5})
+            return
+        end
+
+        if isTempleBuilt(TempleId.BibleTemple) == true then
+            purchaseMaxTemple(Temples.Bible)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoBibleTemple") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(6)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(6)")
+    end
+end
+
+local function autoSoulDPBoard()
+    SetSetting("autoSoulDPBoard", not GetSetting("autoSoulDPBoard"))
+    autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..GetTextFromSetting("autoSoulDPBoard"))
+    autoSoulDPBoardFunctions:updateGradient(getGradient(GetSetting("autoSoulDPBoard")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if getDivinePowerBoardLevel(BoardId.SoulsDivineBoost) == getDivinePowerBoardConfig(BoardId.SoulsDivineBoost).MaxLevel then
+            db = false
+            SetSetting("autoSoulDPBoard", false)
+            if ConnectionExists("StatServiceClient.StatChanged(7)") == true then
+                DestroyConnection("StatServiceClient.StatChanged(7)")
+            end
+            autoSoulDPBoardFunctions:updateText("Auto Soul DP Board: "..GetTextFromSetting("autoSoulDPBoard"))
+            autoSoulDPBoardFunctions:updateGradient(getGradient(GetSetting("autoSoulDPBoard")))
+            show({Text = "Soul DP Board is Maxed! Auto Soul DP Board disabled.", Duration = 5})
+            return
+        end
+
+        local board = (function()
+            for _, v in pairs(DPBoards:GetChildren()) do
+                local boardId = getBoardId(v)
+
+                if boardId == BoardId.SoulsDivineBoost then
+                    return v
+                end
+            end
+
+            return nil
+        end)()
+
+        if board ~= nil then
+            purchaseMaxDPBoard(board)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoSoulDPBoard") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(7)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(7)")
+    end
+end
+
+local function autoRelicDPBoard()
+    SetSetting("autoRelicDPBoard", not GetSetting("autoRelicDPBoard"))
+    autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..GetTextFromSetting("autoRelicDPBoard"))
+    autoRelicDPBoardFunctions:updateGradient(getGradient(GetSetting("autoRelicDPBoard")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if getDivinePowerBoardLevel(BoardId.RelicsDivineBoost) == getDivinePowerBoardConfig(BoardId.RelicsDivineBoost).MaxLevel then
+            db = false
+            SetSetting("autoRelicDPBoard", false)
+            if ConnectionExists("StatServiceClient.StatChanged(8)") == true then
+                DestroyConnection("StatServiceClient.StatChanged(8)")
+            end
+            autoRelicDPBoardFunctions:updateText("Auto Relic DP Board: "..GetTextFromSetting("autoRelicDPBoard"))
+            autoRelicDPBoardFunctions:updateGradient(getGradient(GetSetting("autoRelicDPBoard")))
+            show({Text = "Relic DP Board is Maxed! Auto Relic DP Board disabled.", Duration = 5})
+            return
+        end
+
+        local board = (function()
+            for _, v in pairs(DPBoards:GetChildren()) do
+                local boardId = getBoardId(v)
+
+                if boardId == BoardId.RelicsDivineBoost then
+                    return v
+                end
+            end
+
+            return nil
+        end)()
+
+        if board ~= nil then
+            purchaseMaxDPBoard(board)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoRelicDPBoard") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(8)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(8)")
+    end
+end
+
+local function autoBibleDPBoard()
+    SetSetting("autoBibleDPBoard", not GetSetting("autoBibleDPBoard"))
+    autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..GetTextFromSetting("autoBibleDPBoard"))
+    autoBibleDPBoardFunctions:updateGradient(getGradient(GetSetting("autoBibleDPBoard")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if getDivinePowerBoardLevel(BoardId.BibleDivineBoost) == getDivinePowerBoardConfig(BoardId.BibleDivineBoost).MaxLevel then
+            db = false
+            SetSetting("autoBibleDPBoard", false)
+            if ConnectionExists("StatServiceClient.StatChanged(9)") == true then
+                DestroyConnection("StatServiceClient.StatChanged(9)")
+            end
+            autoBibleDPBoardFunctions:updateText("Auto Bible DP Board: "..GetTextFromSetting("autoBibleDPBoard"))
+            autoBibleDPBoardFunctions:updateGradient(getGradient(GetSetting("autoBibleDPBoard")))
+            show({Text = "Bible DP Board is Maxed! Auto Bible DP Board disabled.", Duration = 5})
+            return
+        end
+
+        local board = (function()
+            for _, v in pairs(DPBoards:GetChildren()) do
+                local boardId = getBoardId(v)
+
+                if boardId == BoardId.BibleDivineBoost then
+                    return v
+                end
+            end
+
+            return nil
+        end)()
+
+        if board ~= nil then
+            purchaseMaxDPBoard(board)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoBibleDPBoard") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(9)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(9)")
+    end
+end
+
+local function autoDepositMainTemple()
+    SetSetting("autoDepositMainTemple", not GetSetting("autoDepositMainTemple"))
+    autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..GetTextFromSetting("autoDepositMainTemple"))
+    autoDepositMainTempleFunctions:updateGradient(getGradient(GetSetting("autoDepositMainTemple")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        if isTempleBuilt(TempleId.MainTemple) ~= true then
+            if areAllCurrencyTemplesCompleted() == true then
+                RequestBuildTemple(TempleId.MainTemple)
+            end
+        end
+
+        if getTempleLevel(TempleId.MainTemple) == getTempleConfig(TempleId.MainTemple).MaxLevel then
+            db = false
+            SetSetting("autoDepositMainTemple", false)
+            if ConnectionExists("StatServiceClient.StatChanged(10)") == true then
+                DestroyConnection("StatServiceClient.StatChanged(10)")
+            end
+            autoDepositMainTempleFunctions:updateText("Auto Deposit Main Temple: "..GetTextFromSetting("autoDepositMainTemple"))
+            autoDepositMainTempleFunctions:updateGradient(getGradient(GetSetting("autoDepositMainTemple")))
+            show({Text = "Main Temple is Maxed! Auto Deposit Main Temple disabled.", Duration = 5})
+            return
+        end
+
+        if isTempleBuilt(TempleId.MainTemple) == true then
+            depositAll()
+            RequestUpgradeTemple(TempleId.MainTemple)
+        end
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoDepositMainTemple") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(10)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(10)")
+    end
+end
+
+local function autoHellStairsNodes()
+    SetSetting("autoHellStairsNodes", not GetSetting("autoHellStairsNodes"))
+    autoHellStairsNodesFunctions:updateText("Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes"))
+    autoHellStairsNodesFunctions:updateGradient(getGradient(GetSetting("autoHellStairsNodes")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        local t = {}
+
+        for _, v in pairs(Trees.HellStairs:GetChildren()) do
+            if v:IsA("Model") and v:FindFirstChild("Node") then
+                if checkNodeAvailable(v) == true then
+                    table.insert(t, v)
+                end
+            end 
+        end
+
+        DebugPrint("Hell Stairs Nodes: "..tostring(#t))
+        purchaseNodes(t)
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoHellStairsNodes") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(11)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(11)")
+    end
+end
+
+local function autoStairwayNodes()
+    SetSetting("autoStairwayNodes", not GetSetting("autoStairwayNodes"))
+    autoStairwayNodesFunctions:updateText("Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes"))
+    autoStairwayNodesFunctions:updateGradient(getGradient(GetSetting("autoStairwayNodes")))
+
+    local db = false
+
+    local function auto()
+        if db == true then return end
+        db = true
+
+        local t = {}
+
+        for _, v in pairs(Trees.Stairway:GetChildren()) do
+            if v:IsA("Model") and v:FindFirstChild("Node") then
+                if checkNodeAvailable(v) == true then
+                    table.insert(t, v)
+                end
+            end 
+        end
+
+        DebugPrint("Stairway Nodes: "..tostring(#t))
+        purchaseNodes(t)
+        task.wait(0.5)
+        db = false
+    end
+
+    if GetSetting("autoStairwayNodes") == true then
+        auto()
+
+        NewConnection("StatServiceClient.StatChanged(12)", StatServiceClient.StatChanged:Connect(function(stat, value)
+            auto()
+        end))
+    else
+        DestroyConnection("StatServiceClient.StatChanged(12)")
+    end
+end
+
 local function autoUnderworld()
     SetSetting("autoUnderworld", not GetSetting("autoUnderworld"))
     autoUnderworldFunctions:updateText("Auto Underworld: "..GetTextFromSetting("autoUnderworld"))
@@ -1997,85 +2604,24 @@ local function autoUnderworld()
     end
 end
 
+-------------------->> Close Buttons <<--------------------
+show({Text = "Loading connections..."; Duration = 2;})
 
-local function autoHellStairsNodes()
-    SetSetting("autoHellStairsNodes", not GetSetting("autoHellStairsNodes"))
-    autoHellStairsNodesFunctions:updateText("Auto Hell Stairs Nodes: "..GetTextFromSetting("autoHellStairsNodes"))
-    autoHellStairsNodesFunctions:updateGradient(getGradient(GetSetting("autoHellStairsNodes")))
+do
+    NewConnection("closeButton.MouseButton1Click", closeButton.MouseButton1Click:Connect(function()
+        getgenv().Destroy()
+    end))
 
-    local db = false
+    NewConnection("closeButtonSettings.MouseButton1Click", closeButtonSettings.MouseButton1Click:Connect(function()
+        backSettingsFrame.Visible = false
+    end))
 
-    local function auto()
-        if db == true then return end
-        db = true
-
-        local t = {}
-
-        for _, v in pairs(Trees.HellStairs:GetChildren()) do
-            if v:IsA("Model") and v:FindFirstChild("Node") then
-                if checkNodeAvailable(v) == true then
-                    table.insert(t, v)
-                end
-            end 
-        end
-
-        DebugPrint("Hell Stairs Nodes: "..tostring(#t))
-        purchaseNodes(t)
-        task.wait(0.5)
-        db = false
-    end
-
-    if GetSetting("autoHellStairsNodes") == true then
-        auto()
-
-        NewConnection("StatServiceClient.StatChanged(12)", StatServiceClient.StatChanged:Connect(function(stat, value)
-            auto()
-        end))
-    else
-        DestroyConnection("StatServiceClient.StatChanged(12)")
-    end
+    NewConnection("closeButtonUpgrades.MouseButton1Click", closeButtonUpgrades.MouseButton1Click:Connect(function()
+        backUpgradesFrame.Visible = false
+    end))
 end
 
-local function autoStairwayNodes()
-    SetSetting("autoStairwayNodes", not GetSetting("autoStairwayNodes"))
-    autoStairwayNodesFunctions:updateText("Auto Stairway Nodes: "..GetTextFromSetting("autoStairwayNodes"))
-    autoStairwayNodesFunctions:updateGradient(getGradient(GetSetting("autoStairwayNodes")))
-
-    local db = false
-
-    local function auto()
-        if db == true then return end
-        db = true
-
-        local t = {}
-
-        for _, v in pairs(Trees.Stairway:GetChildren()) do
-            if v:IsA("Model") and v:FindFirstChild("Node") then
-                if checkNodeAvailable(v) == true then
-                    table.insert(t, v)
-                end
-            end 
-        end
-
-        DebugPrint("Stairway Nodes: "..tostring(#t))
-        purchaseNodes(t)
-        task.wait(0.5)
-        db = false
-    end
-
-    if GetSetting("autoStairwayNodes") == true then
-        auto()
-
-        NewConnection("StatServiceClient.StatChanged(13)", StatServiceClient.StatChanged:Connect(function(stat, value)
-            auto()
-        end))
-    else
-        DestroyConnection("StatServiceClient.StatChanged(13)")
-    end
-end
-
--------------------->> Main Frame Buttons <<--------------------
-show({Text = "Loading connections..."; Duration = 3;})
+-------------------->> Main Buttons <<--------------------
 
 do
     NewConnection("farmSpirits.MouseButton1Click", farmSpiritsButton.MouseButton1Click:Connect(function()
@@ -2095,27 +2641,11 @@ do
     end))
 
     NewConnection("autoReincarnateButton.MouseButton1Click", autoReincarnateButton.MouseButton1Click:Connect(function()
-        autoReincarnate()
+        AutoReincarnate()
     end))
 
     NewConnection("autoClickRelicButton.MouseButton1Click", autoClickRelicButton.MouseButton1Click:Connect(function()
-        autoClickRelic()
-    end))
-end
-
--------------------->> Close Buttons <<--------------------
-
-do
-    NewConnection("closeButton.MouseButton1Click", closeButton.MouseButton1Click:Connect(function()
-        getgenv().Destroy()
-    end))
-
-    NewConnection("closeButtonSettings.MouseButton1Click", closeButtonSettings.MouseButton1Click:Connect(function()
-        backSettingsFrame.Visible = false
-    end))
-
-    NewConnection("closeButtonUpgrades.MouseButton1Click", closeButtonUpgrades.MouseButton1Click:Connect(function()
-        backUpgradesFrame.Visible = false
+        AutoClickRelic()
     end))
 end
 
@@ -2134,8 +2664,23 @@ do
         AutoRadianceBoostWhenMax()
     end))
 
-    NewConnection("acsendButton.MouseButton1Click", acsendButton.MouseButton1Click:Connect(function()
-        RequestAcension()
+    NewConnection("autoAscendButton.MouseButton1Click", autoAscendButton.MouseButton1Click:Connect(function()
+        AutoAscend()
+    end))
+
+    NewConnection("ascendButton.MouseButton1Click", ascendButton.MouseButton1Click:Connect(function()
+        RequestAscension()
+        show({Text = "Requesting Ascension...", Duration = 3})
+    end))
+
+    NewConnection("copyScriptButton.MouseButton1Click", copyScriptButton.MouseButton1Click:Connect(function()
+        setclipboard(link)
+        show({Text = "Script Copied to Clipboard!", Duration = 3})
+    end))
+
+    NewConnection("queueOnTeleportButton.MouseButton1Click", queueOnTeleportButton.MouseButton1Click:Connect(function()
+        queue_on_teleport(link)
+        show({Text = "Script Queued on Teleport! Can't be disabled until teleportation is complete.", Duration = 3})
     end))
 end
 
@@ -2158,8 +2703,32 @@ do
         autoZone3EliteSouls()
     end))
 
-    NewConnection("autoUnderworldButton.MouseButton1Click", autoUnderworldButton.MouseButton1Click:Connect(function()
-        autoUnderworld()
+    NewConnection("autoSoulTempleButton.MouseButton1Click", autoSoulTempleButton.MouseButton1Click:Connect(function()
+        autoSoulTemple()
+    end))
+
+    NewConnection("autoRelicTempleButton.MouseButton1Click", autoRelicTempleButton.MouseButton1Click:Connect(function()
+        autoRelicTemple()
+    end))
+
+    NewConnection("autoBibleTempleButton.MouseButton1Click", autoBibleTempleButton.MouseButton1Click:Connect(function()
+        autoBibleTemple()
+    end))
+
+    NewConnection("autoSoulDPBoardButton.MouseButton1Click", autoSoulDPBoardButton.MouseButton1Click:Connect(function()
+        autoSoulDPBoard()
+    end))
+
+    NewConnection("autoRelicDPBoardButton.MouseButton1Click", autoRelicDPBoardButton.MouseButton1Click:Connect(function()
+        autoRelicDPBoard()
+    end))
+
+    NewConnection("autoBibleDPBoardButton.MouseButton1Click", autoBibleDPBoardButton.MouseButton1Click:Connect(function()
+        autoBibleDPBoard()
+    end))
+
+    NewConnection("autoDepositMainTempleButton.MouseButton1Click", autoDepositMainTempleButton.MouseButton1Click:Connect(function()
+        autoDepositMainTemple()
     end))
 
     NewConnection("autoHellStairsNodesButton.MouseButton1Click", autoHellStairsNodesButton.MouseButton1Click:Connect(function()
@@ -2168,6 +2737,10 @@ do
 
     NewConnection("autoStairwayNodesButton.MouseButton1Click", autoStairwayNodesButton.MouseButton1Click:Connect(function()
         autoStairwayNodes()
+    end))
+
+    NewConnection("autoUnderworldButton.MouseButton1Click", autoUnderworldButton.MouseButton1Click:Connect(function()
+        autoUnderworld()
     end))
 end
 
