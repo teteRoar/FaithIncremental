@@ -1,5 +1,5 @@
 -------------------->> Execution Check <<--------------------
-local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v3.0.0.lua", true))()'
+local scriptHttp = 'loadstring(game:HttpGet("https://raw.githubusercontent.com/teteRoar/FaithIncremental/refs/heads/main/v3.0.1.lua", true))()'
 
 if game.PlaceId ~= 94264573845314 then
     warn("Please execute this script in the correct game, 'Faith Incremental'! | PlaceId: 94264573845314")
@@ -1125,15 +1125,15 @@ do
 
         local functionsT = {}
 
-        function functions:updateText(text)
+        function functionsT:updateText(text)
             textL.Text = text
         end
 
-        function functions:updateGradient(gradient)
+        function functionsT:updateGradient(gradient)
             grad.Color = gradient
         end
 
-        function functions:updateLayoutOrder(order)
+        function functionsT:updateLayoutOrder(order)
             imageButton.LayoutOrder = order
         end
 
